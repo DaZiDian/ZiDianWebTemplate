@@ -1,10 +1,10 @@
 // Vercel Serverless Function - 留言 API
-import { createClient } from '@vercel/postgres';
+const { sql } = require('@vercel/postgres');
 
 // 初始化数据库表（仅在表不存在时创建）
-async function initDatabase(client) {
+async function initDatabase() {
   try {
-    await client.sql`
+    await sql`
       CREATE TABLE IF NOT EXISTS messages (
         id SERIAL PRIMARY KEY,
         avatar TEXT,
@@ -21,7 +21,7 @@ async function initDatabase(client) {
   }
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -32,16 +32,13 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const client = createClient();
-  await client.connect();
-
   // 初始化数据库
-  await initDatabase(client);
+  await initDatabase();
 
   try {
     // GET - 获取所有留言
     if (req.method === 'GET') {
-      const { rows } = await client.sql`
+      const { rows } = await sql`
         SELECT * FROM messages 
         ORDER BY created_at DESC 
         LIMIT 100
@@ -66,7 +63,7 @@ export default async function handler(req, res) {
       }
 
       // 插入留言
-      const { rows } = await client.sql`
+      const { rows } = await sql`
         INSERT INTO messages (avatar, nickname, gender, birthday, email, content)
         VALUES (${avatar || ''}, ${nickname || '游客'}, ${gender || ''}, ${birthday || null}, ${email || ''}, ${content})
         RETURNING *
@@ -88,10 +85,9 @@ export default async function handler(req, res) {
     console.error('API Error:', error);
     return res.status(500).json({
       success: false,
-      error: '服务器错误，请稍后再试'
+      error: '服务器错误，请稍后再试',
+      details: error.message
     });
-  } finally {
-    await client.end();
   }
 }
 
