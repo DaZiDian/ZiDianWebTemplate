@@ -1,0 +1,520 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 导入字体 */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JetBrains Mono', 'STZhongsong', '华文中宋', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* 黑夜模式默认白色字体 */
+.dark {
+  color: #ffffff;
+}
+
+.light {
+  color: #1f2937;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Tokyo Night 配色主题 */
+:root {
+  --tokyo-night-bg: #1a1b26;
+  --tokyo-night-bg-dark: #16161e;
+  --tokyo-night-bg-highlight: #292e42;
+  --tokyo-night-terminal-black: #414868;
+  --tokyo-night-fg: #c0caf5;
+  --tokyo-night-fg-dark: #a9b1d6;
+  --tokyo-night-fg-gutter: #3b4261;
+  --tokyo-night-dark3: #545c7e;
+  --tokyo-night-comment: #565f89;
+  --tokyo-night-dark5: #737aa2;
+  --tokyo-night-blue0: #3d59a1;
+  --tokyo-night-blue: #7aa2f7;
+  --tokyo-night-cyan: #7dcfff;
+  --tokyo-night-blue1: #2ac3de;
+  --tokyo-night-blue2: #0db9d7;
+  --tokyo-night-blue5: #89ddff;
+  --tokyo-night-blue6: #b4f9f8;
+  --tokyo-night-blue7: #394b70;
+  --tokyo-night-magenta: #bb9af7;
+  --tokyo-night-magenta2: #ff007c;
+  --tokyo-night-purple: #9d7cd8;
+  --tokyo-night-orange: #ff9e64;
+  --tokyo-night-yellow: #e0af68;
+  --tokyo-night-green: #9ece6a;
+  --tokyo-night-green1: #73daca;
+  --tokyo-night-green2: #41a6b5;
+  --tokyo-night-teal: #1abc9c;
+  --tokyo-night-red: #f7768e;
+  --tokyo-night-red1: #db4b4b;
+}
+
+/* 主题背景 */
+.tokyo-night-bg {
+  background: linear-gradient(135deg, #1a1b26 0%, #16161e 50%, #1a1b26 100%);
+}
+
+.light-bg {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%);
+}
+
+/* 主题切换过渡 */
+.theme-transition {
+  transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-transition * {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 毛玻璃效果 - 支持主题切换 */
+.dark .glass-effect {
+  background: rgba(41, 46, 66, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(122, 162, 247, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+}
+
+.light .glass-effect {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  color: #1f2937;
+}
+
+.dark .glass-effect-dark {
+  background: rgba(22, 22, 30, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(122, 162, 247, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.light .glass-effect-dark {
+  background: rgba(248, 249, 250, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(122, 162, 247, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* 链接下划线动画 - Tokyo Night 配色 */
+.link-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background: linear-gradient(90deg, var(--tokyo-night-blue), var(--tokyo-night-cyan));
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.link-underline:hover::after {
+  transform: scaleX(1);
+}
+
+.link-underline.active::after {
+  animation: pulseLine 1.5s ease-in-out infinite;
+  transform: scaleX(1);
+}
+
+@keyframes pulseLine {
+  0%, 100% {
+    transform: scaleX(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* 卡片悬浮效果 */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* 页面过渡动画 */
+.page-transition-enter-active,
+.page-transition-leave-active {
+  transition: all 0.3s ease;
+}
+
+.page-transition-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-transition-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+/* 加载进度条 */
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+  z-index: 9999;
+  transform-origin: left;
+}
+
+/* 背景渐变 */
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-bg-2 {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-bg-3 {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* 淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+/* 缩放进入动画 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 旋转动画 */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-rotate {
+  animation: rotate 2s linear infinite;
+}
+
+/* 滑入动画 */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out forwards;
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 悬浮提升效果 */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* 平滑滚动 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 文字颜色 - 主题切换 */
+.dark .text-theme {
+  color: #c0caf5;
+}
+
+.light .text-theme {
+  color: #1f2937;
+}
+
+.dark .text-theme-muted {
+  color: #a9b1d6;
+}
+
+.light .text-theme-muted {
+  color: #6b7280;
+}
+
+.dark .text-theme-accent {
+  color: #7aa2f7;
+}
+
+.light .text-theme-accent {
+  color: #2563eb;
+}
+
+/* 边框颜色 */
+.dark .border-theme {
+  border-color: rgba(122, 162, 247, 0.3);
+}
+
+.light .border-theme {
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+/* 滚动动画 - 上浮效果 */
+.scroll-animate {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-animate.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 黑夜模式标题渐变显现动画 - 从左向右 */
+@keyframes gradientRevealLTR {
+  0% {
+    background-position: -200% center;
+    opacity: 0;
+  }
+  100% {
+    background-position: 0% center;
+    opacity: 1;
+  }
+}
+
+.dark .title-reveal {
+  background: linear-gradient(90deg, #7aa2f7, #bb9af7, #7dcfff);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #7aa2f7;
+  animation: gradientRevealLTR 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  background-position: 0% center;
+}
+
+.light .title-reveal {
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #2563eb;
+}
+
+/* 黑夜模式签名渐变显现动画 */
+.dark .signature-reveal {
+  background: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 50%, #7dcfff 100%);
+  background-size: 200% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #7aa2f7;
+  animation: gradientRevealLTR 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards, 
+             gradientShift 3s ease infinite;
+  animation-delay: 0s, 2.5s;
+  background-position: 0% 50%;
+}
+
+.light .signature-reveal {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #06b6d4 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #2563eb;
+}
+
+/* 渐变循环动画 - 用于签名 */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* 延迟动画 - 用于交错效果 */
+.scroll-animate-delay-1 {
+  transition-delay: 0.1s;
+}
+
+.scroll-animate-delay-2 {
+  transition-delay: 0.2s;
+}
+
+.scroll-animate-delay-3 {
+  transition-delay: 0.3s;
+}
+
+.scroll-animate-delay-4 {
+  transition-delay: 0.4s;
+}
+
+.scroll-animate-delay-5 {
+  transition-delay: 0.5s;
+}
+
+.scroll-animate-delay-6 {
+  transition-delay: 0.6s;
+}
+
+/* 留言板输入框专用样式 - 全局强制 */
+.guestbook-input {
+  color: inherit;
+}
+
+.dark .guestbook-input,
+.dark .guestbook-input:focus,
+.dark .guestbook-input:active {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.light .guestbook-input,
+.light .guestbook-input:focus,
+.light .guestbook-input:active {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+/* Placeholder 样式 */
+.dark .guestbook-input::placeholder {
+  color: rgba(156, 163, 175, 0.8) !important;
+  -webkit-text-fill-color: rgba(156, 163, 175, 0.8) !important;
+}
+
+.light .guestbook-input::placeholder {
+  color: rgba(107, 114, 128, 0.8) !important;
+  -webkit-text-fill-color: rgba(107, 114, 128, 0.8) !important;
+}
+
+/* Select option 样式 */
+.dark .guestbook-input option {
+  background-color: #292e42 !important;
+  color: #ffffff !important;
+}
+
+.light .guestbook-input option {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* 浏览器自动填充样式 */
+.dark .guestbook-input:-webkit-autofill,
+.dark .guestbook-input:-webkit-autofill:hover,
+.dark .guestbook-input:-webkit-autofill:focus,
+.dark .guestbook-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0 1000px #292e42 inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: #ffffff !important;
+}
+
+.light .guestbook-input:-webkit-autofill,
+.light .guestbook-input:-webkit-autofill:hover,
+.light .guestbook-input:-webkit-autofill:focus,
+.light .guestbook-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #111827 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: #111827 !important;
+}
+
+/* 响应式隐藏 */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .show-mobile {
+    display: none;
+  }
+}
+

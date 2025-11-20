@@ -1,0 +1,44 @@
+{
+  "name": "z1d1anweb",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "DaZiDian的个人网站 - 使用Vue3和Vite构建的现代化个人网站",
+  "author": "DaZiDian <dz1d07@outlook.com>",
+  "license": "MIT",
+  "homepage": "https://dazidian.github.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DaZiDian/dazidian.github.io.git"
+  },
+  "keywords": [
+    "vue3",
+    "vite",
+    "tailwindcss",
+    "personal-website",
+    "portfolio"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
+  },
+  "dependencies": {
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0",
+    "axios": "^1.6.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "autoprefixer": "^10.4.18",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.4"
+  }
+}
+
