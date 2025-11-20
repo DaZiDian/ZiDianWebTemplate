@@ -258,52 +258,56 @@ onUnmounted(() => {
 })
 
 // 提交留言
-const submitMessage = () => {
+const submitMessage = async () => {
   if (!form.content.trim()) {
     alert('请输入留言内容')
     return
   }
   
-  const newMessage = {
-    avatar: form.avatar,
-    nickname: form.nickname || '游客',
-    gender: form.gender,
-    birthday: form.birthday,
-    email: form.email,
-    content: form.content,
-    timestamp: new Date().toLocaleString('zh-CN', { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit', 
-      hour: '2-digit', 
-      minute: '2-digit' 
+  try {
+    isLoading.value = true
+    
+    const response = await axios.post(`${API_BASE}/messages`, {
+      avatar: form.avatar || '',
+      nickname: form.nickname || '游客',
+      gender: form.gender || '',
+      birthday: form.birthday || null,
+      email: form.email || '',
+      content: form.content
     })
-  }
-  
-  messages.value.unshift(newMessage)
-  
-  // 保存到localStorage
-  localStorage.setItem('guestbook_messages', JSON.stringify(messages.value))
-  
-  // 保存用户信息到Cookie
-  if (saveCookie.value) {
-    const userData = {
-      avatar: form.avatar,
-      nickname: form.nickname,
-      gender: form.gender,
-      birthday: form.birthday,
-      email: form.email
+    
+    if (response.data.success) {
+      // 保存用户信息到Cookie
+      if (saveCookie.value) {
+        const userData = {
+          avatar: form.avatar,
+          nickname: form.nickname,
+          gender: form.gender,
+          birthday: form.birthday,
+          email: form.email
+        }
+        setCookie('guestbook_user', JSON.stringify(userData), 365)
+      } else {
+        deleteCookie('guestbook_user')
+      }
+      
+      // 清空留言内容
+      form.content = ''
+      
+      // 重新加载留言列表
+      await fetchMessages()
+      
+      // 显示成功提示
+      alert('留言发布成功！')
+    } else {
+      alert('留言提交失败: ' + (response.data.error || '未知错误'))
     }
-    setCookie('guestbook_user', JSON.stringify(userData), 365)
-  } else {
-    deleteCookie('guestbook_user')
+  } catch (error) {
+    console.error('提交留言失败:', error)
+    alert('留言提交失败，请稍后再试。\n错误: ' + error.message)
+  } finally {
+    isLoading.value = false
   }
-  
-  // 清空留言内容
-  form.content = ''
-  
-  // 显示成功提示
-  alert('留言发布成功！')
 }
 
 // Cookie操作函数
