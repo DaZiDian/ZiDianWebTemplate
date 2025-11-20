@@ -183,9 +183,13 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
 import { useTheme } from '../composables/useTheme'
+import axios from 'axios'
 
 useScrollAnimation()
 const { isDark } = useTheme()
+
+// API 基础路径
+const API_BASE = '/api'
 
 // 表单数据
 const form = reactive({
@@ -199,19 +203,36 @@ const form = reactive({
 
 const saveCookie = ref(false)
 const showBackToTop = ref(false)
+const isLoading = ref(false)
 
-// 留言列表 - 示例数据
-const messages = ref([
-  {
-    avatar: '',
-    nickname: 'DaZiDian',
-    gender: 'male',
-    birthday: '2007-03-26',
-    email: 'dz1d07@outlook.com',
-    content: '欢迎来到我的留言板！\n这里可以留下你的想法和建议~',
-    timestamp: '2024-11-20 12:00'
+// 留言列表
+const messages = ref([])
+
+// 获取留言列表
+const fetchMessages = async () => {
+  try {
+    isLoading.value = true
+    const response = await axios.get(`${API_BASE}/messages`)
+    if (response.data.success) {
+      messages.value = response.data.data.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.created_at).toLocaleString('zh-CN')
+      }))
+    }
+  } catch (error) {
+    console.error('获取留言失败:', error)
+    // 如果 API 失败，显示友好提示
+    if (messages.value.length === 0) {
+      messages.value = [{
+        nickname: '系统提示',
+        content: '留言加载中，请稍候...',
+        timestamp: new Date().toLocaleString('zh-CN')
+      }]
+    }
+  } finally {
+    isLoading.value = false
   }
-])
+}
 
 // 从Cookie加载用户信息
 onMounted(() => {
@@ -228,15 +249,8 @@ onMounted(() => {
   
   window.addEventListener('scroll', handleScroll)
   
-  // 从localStorage加载留言
-  const savedMessages = localStorage.getItem('guestbook_messages')
-  if (savedMessages) {
-    try {
-      messages.value = JSON.parse(savedMessages)
-    } catch (e) {
-      console.error('Failed to parse messages')
-    }
-  }
+  // 加载留言列表
+  fetchMessages()
 })
 
 onUnmounted(() => {

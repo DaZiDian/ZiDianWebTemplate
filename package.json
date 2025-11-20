@@ -29,9 +29,10 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@vercel/postgres": "^0.5.1",
+    "axios": "^1.6.7",
     "vue": "^3.4.21",
-    "vue-router": "^4.3.0",
-    "axios": "^1.6.7"
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
@@ -41,4 +42,3 @@
     "vite": "^5.1.4"
   }
 }
-
