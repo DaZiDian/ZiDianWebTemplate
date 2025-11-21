@@ -17,21 +17,23 @@
         </button>
         <button 
           @click="saveDraft"
-          class="px-4 py-2 rounded-lg font-medium transition-all"
+          :disabled="isSaving"
+          class="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50"
           :class="isDark 
             ? 'bg-gray-700 text-white hover:bg-gray-600' 
             : 'bg-gray-200 text-gray-800 hover:bg-gray-300'"
         >
-          保存草稿
+          {{ isSaving ? '保存中...' : '保存草稿' }}
         </button>
         <button 
           @click="publish"
-          class="px-4 py-2 rounded-lg font-medium text-white transition-all"
+          :disabled="isSaving"
+          class="px-4 py-2 rounded-lg font-medium text-white transition-all disabled:opacity-50"
           :class="isDark 
             ? 'bg-tokyo-night-blue hover:bg-tokyo-night-blue0' 
             : 'bg-blue-600 hover:bg-blue-700'"
         >
-          发布文章
+          {{ isSaving ? '发布中...' : '发布文章' }}
         </button>
       </div>
     </div>
@@ -221,7 +223,11 @@ import { useTheme } from '../composables/useTheme'
 const { isDark } = useTheme()
 
 const props = defineProps({
-  post: Object
+  post: Object,
+  isSaving: {
+    type: Boolean,
+    default: false
+  }
 })
 
 const emit = defineEmits(['save', 'cancel'])

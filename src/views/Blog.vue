@@ -27,9 +27,13 @@
 
       <!-- 文章列表 -->
       <div class="max-w-4xl mx-auto space-y-6">
+        <div v-if="isLoading" class="text-center py-12">
+          <p class="transition-colors" :class="isDark ? 'text-gray-400' : 'text-gray-600'">加载中...</p>
+        </div>
         <article 
+          v-else
           v-for="(article, index) in articles" 
-          :key="index"
+          :key="article.id || article.slug || index"
           class="glass-effect rounded-3xl p-8 card-hover scroll-animate"
           :class="`scroll-animate-delay-${Math.min(index + 1, 6)}`"
         >
@@ -80,10 +84,10 @@
         </article>
 
         <!-- 空状态 -->
-        <div v-if="articles.length === 0" class="text-center py-20">
+        <div v-if="!isLoading && articles.length === 0" class="text-center py-20">
           <div class="text-6xl mb-4">📝</div>
-          <p class="text-xl text-tokyo-night-fg">暂无文章</p>
-          <p class="text-tokyo-night-fg-dark mt-2">敬请期待...</p>
+          <p class="text-xl transition-colors" :class="isDark ? 'text-tokyo-night-fg' : 'text-gray-800'">暂无文章</p>
+          <p class="transition-colors mt-2" :class="isDark ? 'text-tokyo-night-fg-dark' : 'text-gray-600'">敬请期待...</p>
         </div>
       </div>
 

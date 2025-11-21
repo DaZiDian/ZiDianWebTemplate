@@ -82,7 +82,11 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title || 'DaZiDian - Z1D1anWeb'
+  // 处理动态标题（支持函数形式）
+  const title = typeof to.meta.title === 'function' 
+    ? to.meta.title(to) 
+    : to.meta.title || 'DaZiDian - Z1D1anWeb'
+  document.title = title
   next()
 })
 

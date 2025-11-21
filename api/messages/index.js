@@ -1,33 +1,6 @@
 // Vercel Serverless Function 连接 CloudFlare D1 数据库
-import { createClient } from '@libsql/client';
-
-// D1 数据库连接配置
-const client = createClient({
-  url: process.env.DATABASE_URL || 'libsql://dazidian-github-io-dazidian.turso.io',
-  authToken: process.env.DATABASE_AUTH_TOKEN
-});
-
-// 初始化数据库表
-async function initDatabase() {
-  try {
-    await client.execute(`
-      CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        avatar TEXT,
-        nickname TEXT DEFAULT '游客',
-        gender TEXT,
-        birthday TEXT,
-        email TEXT,
-        content TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log('Database table initialized successfully');
-  } catch (error) {
-    console.error('Database initialization error:', error);
-    throw error;
-  }
-}
+// 注意：CloudFlare D1需要通过CloudFlare Workers访问，这里改用Vercel Postgres作为替代方案
+// 如果必须使用D1，需要创建CloudFlare Worker作为中间层
 
 export default async function handler(req, res) {
   // 设置 CORS 头
@@ -41,20 +14,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 初始化数据库
-    await initDatabase();
+    // 使用Vercel Postgres（临时方案，直到配置好D1）
+    const { sql } = await import('@vercel/postgres');
+
+    // 初始化数据库表
+    await sql`
+      CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        avatar TEXT,
+        nickname VARCHAR(100) DEFAULT '游客',
+        gender VARCHAR(10),
+        birthday DATE,
+        email VARCHAR(255),
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
 
     // GET - 获取所有留言
     if (req.method === 'GET') {
-      const result = await client.execute(`
+      const { rows } = await sql`
         SELECT * FROM messages 
         ORDER BY created_at DESC 
         LIMIT 100
-      `);
+      `;
       
       return res.status(200).json({
         success: true,
-        data: result.rows
+        data: rows
       });
     }
 
@@ -71,28 +58,15 @@ export default async function handler(req, res) {
       }
 
       // 插入留言
-      const result = await client.execute({
-        sql: `INSERT INTO messages (avatar, nickname, gender, birthday, email, content)
-              VALUES (?, ?, ?, ?, ?, ?)`,
-        args: [
-          avatar || '', 
-          nickname || '游客', 
-          gender || '', 
-          birthday || null, 
-          email || '', 
-          content
-        ]
-      });
-
-      // 获取刚插入的记录
-      const newMessage = await client.execute({
-        sql: `SELECT * FROM messages WHERE id = ?`,
-        args: [result.lastInsertRowid]
-      });
+      const { rows } = await sql`
+        INSERT INTO messages (avatar, nickname, gender, birthday, email, content)
+        VALUES (${avatar || ''}, ${nickname || '游客'}, ${gender || ''}, ${birthday || null}, ${email || ''}, ${content})
+        RETURNING *
+      `;
 
       return res.status(201).json({
         success: true,
-        data: newMessage.rows[0]
+        data: rows[0]
       });
     }
 

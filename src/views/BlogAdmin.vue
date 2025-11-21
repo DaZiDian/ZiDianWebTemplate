@@ -76,9 +76,16 @@
 
         <!-- 文章列表 -->
         <div v-if="!showEditor" class="space-y-4">
+          <div v-if="isLoading && blogPosts.length === 0" class="text-center py-12">
+            <p class="transition-colors" :class="isDark ? 'text-gray-400' : 'text-gray-600'">加载中...</p>
+          </div>
+          <div v-else-if="blogPosts.length === 0" class="text-center py-12">
+            <p class="transition-colors" :class="isDark ? 'text-gray-400' : 'text-gray-600'">还没有文章，点击"写新文章"开始创作吧！</p>
+          </div>
           <div 
-            v-for="(post, index) in blogPosts" 
-            :key="index"
+            v-else
+            v-for="post in blogPosts" 
+            :key="post.id"
             class="glass-effect rounded-2xl p-6 flex justify-between items-center"
           >
             <div class="flex-1">
@@ -90,12 +97,14 @@
                    :class="isDark ? 'text-gray-400' : 'text-gray-600'">
                 <span>{{ post.date }}</span>
                 <span>{{ post.status === 'published' ? '已发布' : '草稿' }}</span>
+                <span>slug: {{ post.slug }}</span>
               </div>
             </div>
             <div class="flex gap-2">
               <button 
                 @click="editPost(post)"
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                :disabled="isLoading"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
                 :class="isDark 
                   ? 'bg-tokyo-night-bg-highlight text-tokyo-night-cyan hover:bg-tokyo-night-blue' 
                   : 'bg-blue-100 text-blue-600 hover:bg-blue-200'"
@@ -103,8 +112,9 @@
                 编辑
               </button>
               <button 
-                @click="deletePost(index)"
-                class="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-all"
+                @click="deletePost(post)"
+                :disabled="isLoading"
+                class="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-all disabled:opacity-50"
               >
                 删除
               </button>
@@ -116,8 +126,9 @@
         <BlogEditor 
           v-if="showEditor"
           :post="editingPost"
+          :is-saving="isSaving"
           @save="savePost"
-          @cancel="showEditor = false"
+          @cancel="showEditor = false; editingPost = null"
         />
       </div>
     </div>
@@ -128,40 +139,54 @@
 import { ref, onMounted } from 'vue'
 import { useTheme } from '../composables/useTheme'
 import BlogEditor from '../components/BlogEditor.vue'
+import axios from 'axios'
 
 const { isDark } = useTheme()
+
+// API 基础路径
+const API_BASE = '/api'
 
 // 认证状态
 const isAuthenticated = ref(false)
 const password = ref('')
 const authError = ref('')
 const isLoading = ref(false)
+const isSaving = ref(false)
 
 // 编辑器状态
 const showEditor = ref(false)
 const editingPost = ref(null)
 
 // 博客文章数据
-const blogPosts = ref([
-  {
-    id: 'introduce-my-blog',
-    title: '欢迎来到我的博客',
-    slug: 'introduce-my-blog',
-    date: '2024-11-21',
-    status: 'published',
-    content: `# 欢迎来到我的博客
+const blogPosts = ref([])
 
-这里是我分享技术见解、学习心得和生活感悟的地方...`,
-    tags: ['博客', '个人网站', 'Vue3', '前端开发']
+// 加载文章列表
+const fetchPosts = async () => {
+  try {
+    isLoading.value = true
+    const response = await axios.get(`${API_BASE}/blog`)
+    if (response.data.success) {
+      blogPosts.value = response.data.data.map(post => ({
+        ...post,
+        date: post.created_at ? new Date(post.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        tags: Array.isArray(post.tags) ? post.tags : []
+      }))
+    }
+  } catch (error) {
+    console.error('加载文章失败:', error)
+    alert('加载文章失败，请稍后重试')
+  } finally {
+    isLoading.value = false
   }
-])
+}
 
 // 检查认证状态
-onMounted(() => {
+onMounted(async () => {
   const authToken = localStorage.getItem('blog_admin_token')
   if (authToken) {
     // 验证token有效性
     isAuthenticated.value = true
+    await fetchPosts()
   }
 })
 
@@ -177,6 +202,7 @@ const handleAuth = async () => {
       localStorage.setItem('blog_admin_token', token)
       isAuthenticated.value = true
       password.value = ''
+      await fetchPosts()
     } else {
       authError.value = '密码错误，请重试'
     }
@@ -192,40 +218,101 @@ const logout = () => {
   localStorage.removeItem('blog_admin_token')
   isAuthenticated.value = false
   showEditor.value = false
+  blogPosts.value = []
 }
 
 // 编辑文章
-const editPost = (post) => {
-  editingPost.value = { ...post }
-  showEditor.value = true
+const editPost = async (post) => {
+  try {
+    isLoading.value = true
+    // 获取完整文章内容
+    const response = await axios.get(`${API_BASE}/blog?slug=${post.slug}`)
+    if (response.data.success) {
+      editingPost.value = {
+        ...response.data.data,
+        tags: Array.isArray(response.data.data.tags) ? response.data.data.tags : []
+      }
+      showEditor.value = true
+    }
+  } catch (error) {
+    console.error('加载文章详情失败:', error)
+    alert('加载文章详情失败')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 // 保存文章
-const savePost = (postData) => {
-  if (editingPost.value) {
-    // 更新现有文章
-    const index = blogPosts.value.findIndex(p => p.id === editingPost.value.id)
-    if (index !== -1) {
-      blogPosts.value[index] = { ...postData }
+const savePost = async (postData) => {
+  try {
+    isSaving.value = true
+    
+    if (editingPost.value && editingPost.value.id) {
+      // 更新现有文章
+      const response = await axios.put(`${API_BASE}/blog`, {
+        id: editingPost.value.id,
+        slug: postData.slug,
+        title: postData.title,
+        content: postData.content,
+        tags: postData.tags,
+        status: postData.status
+      })
+      
+      if (response.data.success) {
+        alert('文章更新成功！')
+        await fetchPosts()
+      } else {
+        throw new Error(response.data.error || '更新失败')
+      }
+    } else {
+      // 创建新文章
+      const response = await axios.post(`${API_BASE}/blog`, {
+        slug: postData.slug,
+        title: postData.title,
+        content: postData.content,
+        tags: postData.tags,
+        status: postData.status
+      })
+      
+      if (response.data.success) {
+        alert('文章创建成功！')
+        await fetchPosts()
+      } else {
+        throw new Error(response.data.error || '创建失败')
+      }
     }
-  } else {
-    // 添加新文章
-    const newPost = {
-      ...postData,
-      id: 'post_' + Date.now(),
-      date: new Date().toISOString().split('T')[0]
-    }
-    blogPosts.value.unshift(newPost)
+    
+    showEditor.value = false
+    editingPost.value = null
+  } catch (error) {
+    console.error('保存文章失败:', error)
+    alert(error.response?.data?.error || error.message || '保存文章失败，请稍后重试')
+  } finally {
+    isSaving.value = false
   }
-  
-  showEditor.value = false
-  editingPost.value = null
 }
 
 // 删除文章
-const deletePost = (index) => {
-  if (confirm('确定要删除这篇文章吗？此操作不可撤销。')) {
-    blogPosts.value.splice(index, 1)
+const deletePost = async (post) => {
+  if (!confirm('确定要删除这篇文章吗？此操作不可撤销。')) {
+    return
+  }
+  
+  try {
+    isLoading.value = true
+    const response = await axios.delete(`${API_BASE}/blog?id=${post.id}`)
+    
+    if (response.data.success) {
+      alert('文章已删除')
+      await fetchPosts()
+    } else {
+      throw new Error(response.data.error || '删除失败')
+    }
+  } catch (error) {
+    console.error('删除文章失败:', error)
+    alert(error.response?.data?.error || error.message || '删除文章失败，请稍后重试')
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
