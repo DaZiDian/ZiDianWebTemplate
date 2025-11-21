@@ -42,7 +42,7 @@
             :to="`/blog/${article.slug}`" 
             class="block"
           >
-            <h2 class="text-3xl font-bold mb-4 transition-colors cursor-pointer hover:scale-105 transform title-text"
+            <h2 class="text-3xl font-bold mb-4 transition-colors cursor-pointer hover:scale-105 transform title-text">
               {{ article.title }}
             </h2>
           </router-link>
