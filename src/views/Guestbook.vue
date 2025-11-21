@@ -214,21 +214,23 @@ const fetchMessages = async () => {
     isLoading.value = true
     const response = await axios.get(`${API_BASE}/messages`)
     if (response.data.success) {
-      messages.value = response.data.data.map(msg => ({
-        ...msg,
-        timestamp: new Date(msg.created_at).toLocaleString('zh-CN')
-      }))
+      // 按创建时间倒序排序，显示最新的留言
+      messages.value = response.data.data
+        .map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.created_at).toLocaleString('zh-CN')
+        }))
+        .sort((a, b) => {
+          // 按创建时间倒序排序
+          const dateA = new Date(a.created_at || 0)
+          const dateB = new Date(b.created_at || 0)
+          return dateB - dateA
+        })
     }
   } catch (error) {
     console.error('获取留言失败:', error)
-    // 如果 API 失败，显示友好提示
-    if (messages.value.length === 0) {
-      messages.value = [{
-        nickname: '系统提示',
-        content: '留言加载中，请稍候...',
-        timestamp: new Date().toLocaleString('zh-CN')
-      }]
-    }
+    // 如果 API 失败，显示空数组
+    messages.value = []
   } finally {
     isLoading.value = false
   }

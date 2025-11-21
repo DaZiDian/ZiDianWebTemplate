@@ -108,35 +108,61 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
 import { useTheme } from '../composables/useTheme'
+import axios from 'axios'
 
 useScrollAnimation()
 const { isDark } = useTheme()
 
+const API_BASE = '/api'
 const currentPage = ref(1)
 const totalPages = ref(1)
+const isLoading = ref(false)
 
-// 博客文章数据 - 包含已发布的文章
-const articles = ref([
-  {
-    title: '欢迎来到我的博客',
-    slug: 'introduce-my-blog',
-    date: '2024-11-21',
-    location: '中国 山东 青岛',
-    content: '欢迎来到我的个人博客！这里是我分享技术见解、学习心得和生活感悟的地方。本篇文章将介绍这个博客网站的技术栈、主要功能和设计理念。',
-    tags: ['博客', '个人网站', 'Vue3', '前端开发']
-  },
-  {
-    title: '即将推出更多内容',
-    slug: 'coming-soon',
-    date: '2024-11-20',
-    location: '中国 山东 青岛',
-    content: '正在准备更多精彩的技术文章和学习笔记，包括前端开发、信息安全、数据恢复等方面的内容。敬请期待！',
-    tags: ['预告', '技术分享']
+// 文章数据
+const articles = ref([])
+
+// 从API加载文章
+const fetchArticles = async () => {
+  try {
+    isLoading.value = true
+    const response = await axios.get(`${API_BASE}/blog`)
+    if (response.data.success) {
+      // 只显示已发布的文章，按更新时间倒序
+      articles.value = response.data.data
+        .filter(post => post.status === 'published')
+        .map(post => ({
+          ...post,
+          slug: post.slug,
+          title: post.title,
+          date: post.created_at ? new Date(post.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          location: '中国 山东 青岛',
+          content: post.content ? (post.content.length > 200 ? post.content.substring(0, 200) + '...' : post.content) : ''
+        }))
+        .sort((a, b) => {
+          // 按更新时间倒序排序
+          const dateA = new Date(a.updated_at || a.created_at || 0)
+          const dateB = new Date(b.updated_at || b.created_at || 0)
+          return dateB - dateA
+        })
+      
+      // 计算分页
+      totalPages.value = Math.ceil(articles.value.length / 10) || 1
+    }
+  } catch (error) {
+    console.error('加载文章失败:', error)
+    // 如果API失败，显示空数组
+    articles.value = []
+  } finally {
+    isLoading.value = false
   }
-])
+}
+
+onMounted(() => {
+  fetchArticles()
+})
 </script>
 
 <style scoped>
