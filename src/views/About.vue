@@ -21,8 +21,8 @@
           <div class="relative z-10">
             <h3 class="text-2xl font-bold mb-4 transition-colors" :class="isDark ? 'text-tokyo-night-cyan' : 'text-blue-600'">国家或地区 | Country/Region</h3>
             <div class="space-y-2 transition-colors" :class="isDark ? 'text-white' : 'text-gray-800'">
-              <p class="text-xl font-semibold">🇨🇳 People's Republic of CHINA</p>
-              <p class="text-lg">📍 Qingdao, Shandong</p>
+              <p class="text-xl font-semibold">🇨🇳 中华人民共和国 | People's Republic of CHINA</p>
+              <p class="text-lg">📍 山东省青岛市 | Qingdao, Shandong</p>
             </div>
           </div>
         </div>

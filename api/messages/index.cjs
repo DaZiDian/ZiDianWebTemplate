@@ -1,4 +1,4 @@
-// Vercel Serverless Function - 留言 API
+// Vercel Serverless Function - 留言 API (CommonJS)
 const { sql } = require('@vercel/postgres');
 
 // 初始化数据库表（仅在表不存在时创建）
@@ -16,8 +16,10 @@ async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
+    console.log('Database table initialized successfully');
   } catch (error) {
     console.error('Database initialization error:', error);
+    throw error;
   }
 }
 
@@ -32,10 +34,10 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 初始化数据库
-  await initDatabase();
-
   try {
+    // 初始化数据库
+    await initDatabase();
+
     // GET - 获取所有留言
     if (req.method === 'GET') {
       const { rows } = await sql`
@@ -83,11 +85,17 @@ module.exports = async function handler(req, res) {
 
   } catch (error) {
     console.error('API Error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail
+    });
     return res.status(500).json({
       success: false,
       error: '服务器错误，请稍后再试',
-      details: error.message
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-}
+};
 

@@ -12,7 +12,7 @@
         >
           <img src="/img/LOGO.jpg" alt="Logo" class="w-10 h-10 rounded-full" />
           <span class="text-2xl font-bold logo-text">
-            DaZiDian
+          DaZiDian
           </span>
         </router-link>
         
@@ -68,11 +68,11 @@
           </button>
           
           <!-- 菜单按钮 -->
-          <button 
-            @click="toggleMobileMenu"
+        <button 
+          @click="toggleMobileMenu"
             class="p-2 rounded-lg transition-all duration-300"
             :class="isDark ? 'hover:bg-tokyo-night-bg-highlight' : 'hover:bg-gray-200'"
-          >
+        >
           <svg 
             class="w-6 h-6 transition-transform duration-300"
             :class="[
