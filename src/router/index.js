@@ -3,6 +3,7 @@ import Home from '../views/Home.vue'
 import About from '../views/About.vue'
 import Blog from '../views/Blog.vue'
 import Guestbook from '../views/Guestbook.vue'
+import Shop from '../views/Shop.vue'
 
 const routes = [
   {
