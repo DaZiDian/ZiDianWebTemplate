@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   try {
     // 使用统一的数据库连接工具
-    const { getDatabaseClient } = await import('./utils/db.js');
+    const { getDatabaseClient } = await import('../utils/db.js');
     const db = await getDatabaseClient();
     const sql = db.sql;
 
