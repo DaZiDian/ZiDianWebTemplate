@@ -122,37 +122,36 @@
         <div 
           v-for="(message, index) in messages" 
           :key="index"
-          class="glass-effect rounded-3xl p-6 card-hover scroll-animate"
+          class="glass-effect rounded-2xl p-6 card-hover scroll-animate"
           :class="`scroll-animate-delay-${Math.min(index + 1, 6)}`"
           :style="{ animationDelay: `${index * 0.1}s` }"
         >
-          <!-- 留言者信息 -->
-          <div class="flex items-start gap-4 mb-4">
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-tokyo-night-blue to-tokyo-night-cyan flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden shadow-lg">
+          <div class="flex items-start gap-4">
+            <!-- 头像 -->
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-tokyo-night-blue to-tokyo-night-cyan flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
               <img v-if="message.avatar" :src="message.avatar" alt="avatar" class="w-full h-full object-cover" />
-              <span v-else class="text-lg">{{ (message.nickname || '游').charAt(0) }}</span>
+              <span v-else class="text-sm">{{ (message.nickname || '游').charAt(0) }}</span>
             </div>
             
-            <div class="flex-1">
-              <div class="flex items-center gap-3 mb-1">
-                <span class="font-bold title-text">{{ message.nickname || '游客' }}</span>
-                <span v-if="message.gender" class="text-sm">
+            <!-- 留言内容 -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-semibold text-sm title-text">{{ message.nickname || '游客' }}</span>
+                <span v-if="message.gender" class="text-xs">
                   {{ message.gender === 'male' ? '👨' : message.gender === 'female' ? '👩' : '🧑' }}
                 </span>
+                <span class="text-xs secondary-text">{{ message.timestamp }}</span>
               </div>
               
-              <div class="flex items-center gap-4 text-xs secondary-text">
+              <div class="mt-2">
+                <p class="text-sm leading-relaxed whitespace-pre-wrap content-text">{{ message.content }}</p>
+              </div>
+              
+              <!-- 额外信息（可选显示） -->
+              <div v-if="message.birthday || message.email" class="flex items-center gap-3 mt-2 text-xs secondary-text">
                 <span v-if="message.birthday">🎂 {{ message.birthday }}</span>
                 <span v-if="message.email">📧 {{ message.email }}</span>
-                <span>🕐 {{ message.timestamp }}</span>
               </div>
-            </div>
-          </div>
-          
-          <!-- 留言内容 -->
-          <div class="pl-16">
-            <div class="glass-effect-inner rounded-lg p-4 mb-2">
-              <p class="leading-relaxed whitespace-pre-wrap content-text font-medium">{{ message.content }}</p>
             </div>
           </div>
         </div>

@@ -34,59 +34,53 @@
           v-else
           v-for="(article, index) in articles" 
           :key="article.id || article.slug || index"
-          class="glass-effect rounded-3xl p-8 card-hover scroll-animate"
+          class="glass-effect rounded-2xl p-6 card-hover scroll-animate"
           :class="`scroll-animate-delay-${Math.min(index + 1, 6)}`"
         >
-          <!-- 标题 -->
-          <router-link 
-            :to="`/blog/${article.slug}`" 
-            class="block"
-          >
-            <h2 class="text-3xl font-bold mb-4 transition-colors cursor-pointer hover:scale-105 transform title-text">
-              {{ article.title }}
-            </h2>
-          </router-link>
-          
-          <!-- 发布时间和标签 -->
-          <div class="flex items-center gap-4 mb-6 text-sm secondary-text">
-            <span class="flex items-center gap-2">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-              </svg>
-              {{ article.date }}
-            </span>
-            <span class="flex items-center gap-2">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
-              </svg>
-              {{ article.location }}
-            </span>
-            <!-- 显示标签 -->
-            <div v-if="article.tags && article.tags.length > 0" class="flex items-center gap-2">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
-              </svg>
-              <span class="text-xs">{{ article.tags.slice(0, 2).join(', ') }}</span>
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <!-- 标题 -->
+              <router-link 
+                :to="`/blog/${article.slug}`" 
+                class="block mb-2"
+              >
+                <h2 class="text-2xl font-bold transition-colors cursor-pointer hover:opacity-80 title-text">
+                  {{ article.title }}
+                </h2>
+              </router-link>
+              
+              <!-- 发布时间和状态信息 -->
+              <div class="flex items-center gap-3 text-sm secondary-text mb-3 flex-wrap">
+                <span>{{ article.date }}</span>
+                <span class="px-2 py-0.5 rounded text-xs font-medium"
+                  :class="isDark 
+                    ? 'bg-tokyo-night-green/20 text-tokyo-night-green' 
+                    : 'bg-green-100 text-green-700'"
+                >
+                  已发布
+                </span>
+                <span class="text-xs opacity-60 hidden sm:inline">slug: {{ article.slug }}</span>
+              </div>
+              
+              <!-- 正文预览 -->
+              <div class="prose prose-sm max-w-none leading-relaxed mb-3">
+                <p v-if="article.content" class="text-sm content-text line-clamp-2">{{ article.content }}</p>
+                <p v-else class="text-xs italic opacity-60 secondary-text">暂无内容预览...</p>
+              </div>
             </div>
-          </div>
-          
-          <!-- 正文预览 -->
-          <div class="prose prose-lg max-w-none leading-relaxed mb-4">
-            <p v-if="article.content" class="text-base content-text">{{ article.content }}</p>
-            <p v-else class="text-sm italic opacity-75 secondary-text">暂无内容预览...</p>
-          </div>
-          
-          <!-- 阅读更多按钮 -->
-          <div class="mt-6 flex justify-end">
-            <router-link 
-              :to="`/blog/${article.slug}`"
-              class="inline-block px-6 py-2 rounded-full text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
-              :class="isDark 
-                ? 'bg-gradient-to-r from-tokyo-night-blue to-tokyo-night-cyan' 
-                : 'bg-gradient-to-r from-blue-600 to-blue-700'"
-            >
-              阅读更多 →
-            </router-link>
+            
+            <!-- 阅读更多按钮 -->
+            <div class="flex-shrink-0">
+              <router-link 
+                :to="`/blog/${article.slug}`"
+                class="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105"
+                :class="isDark 
+                  ? 'bg-tokyo-night-blue text-white hover:bg-tokyo-night-cyan' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700'"
+              >
+                阅读 →
+              </router-link>
+            </div>
           </div>
         </article>
 
