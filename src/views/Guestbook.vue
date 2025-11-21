@@ -251,6 +251,9 @@ onMounted(() => {
   
   window.addEventListener('scroll', handleScroll)
   
+  // 监听留言更新事件，自动刷新留言列表
+  window.addEventListener('messages-updated', fetchMessages)
+  
   // 加载留言列表
   fetchMessages()
 })
