@@ -117,7 +117,7 @@
 
       <!-- 留言列表 -->
       <div class="space-y-6">
-        <h2 class="text-2xl font-bold transition-colors" :class="isDark ? 'text-tokyo-night-cyan' : 'text-blue-600'">留言列表</h2>
+        <h2 class="text-2xl font-bold title-text">留言列表</h2>
         
         <div 
           v-for="(message, index) in messages" 
@@ -135,13 +135,13 @@
             
             <div class="flex-1">
               <div class="flex items-center gap-3 mb-1">
-                <span class="font-bold transition-colors" :class="isDark ? 'text-tokyo-night-cyan' : 'text-blue-600'">{{ message.nickname || '游客' }}</span>
+                <span class="font-bold title-text">{{ message.nickname || '游客' }}</span>
                 <span v-if="message.gender" class="text-sm">
                   {{ message.gender === 'male' ? '👨' : message.gender === 'female' ? '👩' : '🧑' }}
                 </span>
               </div>
               
-              <div class="flex items-center gap-4 text-xs transition-colors" :class="isDark ? 'text-tokyo-night-dark5' : 'text-gray-500'">
+              <div class="flex items-center gap-4 text-xs secondary-text">
                 <span v-if="message.birthday">🎂 {{ message.birthday }}</span>
                 <span v-if="message.email">📧 {{ message.email }}</span>
                 <span>🕐 {{ message.timestamp }}</span>
@@ -151,8 +151,8 @@
           
           <!-- 留言内容 -->
           <div class="pl-16">
-            <div class="glass-effect-inner rounded-lg p-4 mb-2" :class="isDark ? 'bg-tokyo-night-bg-highlight/30' : 'bg-white/20'">
-              <p class="leading-relaxed whitespace-pre-wrap transition-colors" :class="isDark ? 'text-tokyo-night-fg' : 'text-gray-800'">{{ message.content }}</p>
+            <div class="glass-effect-inner rounded-lg p-4 mb-2">
+              <p class="leading-relaxed whitespace-pre-wrap content-text font-medium">{{ message.content }}</p>
             </div>
           </div>
         </div>
