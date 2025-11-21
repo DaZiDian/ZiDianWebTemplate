@@ -18,20 +18,37 @@ export default async function handler(req, res) {
     const pool = db.pool;
     const query = db.query || ((text, params) => sql.unsafe ? sql.unsafe(text, params) : pool.query(text, params));
 
-    // 初始化数据库表 - 将tags改为jsonb类型
+    // 初始化数据库表 - 先检查并更新tags列类型
     if (pool) {
+      // 创建表
       await pool.query(`
         CREATE TABLE IF NOT EXISTS blog_posts (
           id SERIAL PRIMARY KEY,
           slug VARCHAR(255) UNIQUE NOT NULL,
           title VARCHAR(500) NOT NULL,
           content TEXT NOT NULL,
-          tags JSONB DEFAULT '[]',
+          tags TEXT[] DEFAULT '{}',
           status VARCHAR(20) DEFAULT 'draft',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+      
+      // 检查并更新tags列类型（如果需要）
+      try {
+        await pool.query(`
+          ALTER TABLE blog_posts 
+          ALTER COLUMN tags TYPE JSONB 
+          USING CASE 
+            WHEN tags IS NULL THEN '[]'::jsonb 
+            WHEN array_length(tags, 1) IS NULL THEN '[]'::jsonb 
+            ELSE array_to_json(tags)::jsonb 
+          END
+        `);
+      } catch (alterError) {
+        // 如果列已经是JSONB类型或其他错误，继续执行
+        console.log('tags列类型更新跳过或失败:', alterError.message);
+      }
     } else {
       await sql`
         CREATE TABLE IF NOT EXISTS blog_posts (
@@ -111,25 +128,36 @@ export default async function handler(req, res) {
         });
       }
 
-      // 插入新文章 - 简化处理，将tags转为JSON字符串存储
+      // 插入新文章 - 兼容处理，支持TEXT[]和JSONB两种格式
       const tagsArray = Array.isArray(tags) ? tags : [];
-      const tagsJson = JSON.stringify(tagsArray);
       
       let result;
       if (pool) {
-        // 使用原生PostgreSQL客户端
-        const insertQuery = `
-          INSERT INTO blog_posts (slug, title, content, tags, status)
-          VALUES ($1, $2, $3, $4::jsonb, $5)
-          RETURNING *
-        `;
-        const insertValues = [slug, title, content, tagsJson, status || 'draft'];
-        result = await pool.query(insertQuery, insertValues);
+        // 使用原生PostgreSQL客户端 - 尝试插入JSONB，失败则使用TEXT[]
+        try {
+          const insertQuery = `
+            INSERT INTO blog_posts (slug, title, content, tags, status)
+            VALUES ($1, $2, $3, $4::jsonb, $5)
+            RETURNING *
+          `;
+          const insertValues = [slug, title, content, JSON.stringify(tagsArray), status || 'draft'];
+          result = await pool.query(insertQuery, insertValues);
+        } catch (jsonbError) {
+          // 如果JSONB插入失败，使用TEXT[]格式
+          console.log('JSONB插入失败，使用TEXT[]格式:', jsonbError.message);
+          const insertQuery = `
+            INSERT INTO blog_posts (slug, title, content, tags, status)
+            VALUES ($1, $2, $3, $4::text[], $5)
+            RETURNING *
+          `;
+          const insertValues = [slug, title, content, tagsArray, status || 'draft'];
+          result = await pool.query(insertQuery, insertValues);
+        }
       } else {
         // 使用 Vercel Postgres
         result = await sql`
           INSERT INTO blog_posts (slug, title, content, tags, status)
-          VALUES (${slug}, ${title}, ${content}, ${tagsJson}::jsonb, ${status || 'draft'})
+          VALUES (${slug}, ${title}, ${content}, ${JSON.stringify(tagsArray)}::jsonb, ${status || 'draft'})
           RETURNING *
         `;
       }
@@ -186,9 +214,9 @@ export default async function handler(req, res) {
       }
       if (tags) {
         const tagsArray = Array.isArray(tags) ? tags : [];
-        const tagsJson = JSON.stringify(tagsArray);
-        updateParts.push(`tags = $${paramIndex++}::jsonb`);
-        updateValues.push(tagsJson);
+        // 先尝试JSONB格式，失败则使用TEXT[]格式
+        updateParts.push(`tags = $${paramIndex++}`);
+        updateValues.push(tagsArray); // 直接使用数组，让数据库处理
       }
       if (status) {
         updateParts.push(`status = $${paramIndex++}`);
@@ -207,7 +235,53 @@ export default async function handler(req, res) {
           WHERE id = $${paramIndex}
           RETURNING *
         `;
-        result = await pool.query(updateQuery, updateValues);
+        
+        // 尝试执行更新，处理tags类型不匹配的问题
+        try {
+          result = await pool.query(updateQuery, updateValues);
+        } catch (updateError) {
+          if (updateError.message.includes('text[] but expression is of type')) {
+            // 如果是类型不匹配，重新构建查询
+            console.log('检测到tags类型不匹配，调整查询...');
+            const newUpdateParts = [];
+            const newUpdateValues = [];
+            let newParamIndex = 1;
+            
+            if (slug) {
+              newUpdateParts.push(`slug = $${newParamIndex++}`);
+              newUpdateValues.push(slug);
+            }
+            if (title) {
+              newUpdateParts.push(`title = $${newParamIndex++}`);
+              newUpdateValues.push(title);
+            }
+            if (content) {
+              newUpdateParts.push(`content = $${newParamIndex++}`);
+              newUpdateValues.push(content);
+            }
+            if (tags) {
+              const tagsArray = Array.isArray(tags) ? tags : [];
+              newUpdateParts.push(`tags = $${newParamIndex++}::text[]`);
+              newUpdateValues.push(tagsArray);
+            }
+            if (status) {
+              newUpdateParts.push(`status = $${newParamIndex++}`);
+              newUpdateValues.push(status);
+            }
+            newUpdateParts.push(`updated_at = CURRENT_TIMESTAMP`);
+            newUpdateValues.push(id);
+            
+            const newUpdateQuery = `
+              UPDATE blog_posts 
+              SET ${newUpdateParts.join(', ')}
+              WHERE id = $${newParamIndex}
+              RETURNING *
+            `;
+            result = await pool.query(newUpdateQuery, newUpdateValues);
+          } else {
+            throw updateError;
+          }
+        }
       } else {
         // 使用 Vercel Postgres
         // 构建动态SQL查询
