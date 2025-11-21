@@ -18,19 +18,34 @@ export default async function handler(req, res) {
     const pool = db.pool;
     const query = db.query || ((text, params) => sql.unsafe ? sql.unsafe(text, params) : pool.query(text, params));
 
-    // 初始化数据库表
-    await sql`
-      CREATE TABLE IF NOT EXISTS blog_posts (
-        id SERIAL PRIMARY KEY,
-        slug VARCHAR(255) UNIQUE NOT NULL,
-        title VARCHAR(500) NOT NULL,
-        content TEXT NOT NULL,
-        tags TEXT[],
-        status VARCHAR(20) DEFAULT 'draft',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
+    // 初始化数据库表 - 将tags改为jsonb类型
+    if (pool) {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS blog_posts (
+          id SERIAL PRIMARY KEY,
+          slug VARCHAR(255) UNIQUE NOT NULL,
+          title VARCHAR(500) NOT NULL,
+          content TEXT NOT NULL,
+          tags JSONB DEFAULT '[]',
+          status VARCHAR(20) DEFAULT 'draft',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    } else {
+      await sql`
+        CREATE TABLE IF NOT EXISTS blog_posts (
+          id SERIAL PRIMARY KEY,
+          slug VARCHAR(255) UNIQUE NOT NULL,
+          title VARCHAR(500) NOT NULL,
+          content TEXT NOT NULL,
+          tags JSONB DEFAULT '[]',
+          status VARCHAR(20) DEFAULT 'draft',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+    }
 
     // GET - 获取所有文章或单篇文章
     if (req.method === 'GET') {
@@ -96,25 +111,25 @@ export default async function handler(req, res) {
         });
       }
 
-      // 插入新文章
+      // 插入新文章 - 简化处理，将tags转为JSON字符串存储
       const tagsArray = Array.isArray(tags) ? tags : [];
-      // 使用参数化查询处理数组
-      const arrayPlaceholders = tagsArray.map((_, i) => `$${i + 4}`).join(', ');
-      const insertQuery = `
-        INSERT INTO blog_posts (slug, title, content, tags, status)
-        VALUES ($1, $2, $3, ARRAY[${arrayPlaceholders}]::text[], $${3 + tagsArray.length + 1})
-        RETURNING *
-      `;
-      const insertValues = [slug, title, content, ...tagsArray, status || 'draft'];
+      const tagsJson = JSON.stringify(tagsArray);
       
       let result;
       if (pool) {
+        // 使用原生PostgreSQL客户端
+        const insertQuery = `
+          INSERT INTO blog_posts (slug, title, content, tags, status)
+          VALUES ($1, $2, $3, $4::jsonb, $5)
+          RETURNING *
+        `;
+        const insertValues = [slug, title, content, tagsJson, status || 'draft'];
         result = await pool.query(insertQuery, insertValues);
       } else {
-        // 使用 sql 模板标签（Vercel Postgres）
+        // 使用 Vercel Postgres
         result = await sql`
           INSERT INTO blog_posts (slug, title, content, tags, status)
-          VALUES (${slug}, ${title}, ${content}, ${tagsArray}::text[], ${status || 'draft'})
+          VALUES (${slug}, ${title}, ${content}, ${tagsJson}::jsonb, ${status || 'draft'})
           RETURNING *
         `;
       }
@@ -152,7 +167,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // 构建更新语句 - 使用字符串拼接方式避免 sql.join 的复杂性
+      // 构建更新语句 - 简化处理
       const updateParts = [];
       const updateValues = [];
       let paramIndex = 1;
@@ -171,10 +186,9 @@ export default async function handler(req, res) {
       }
       if (tags) {
         const tagsArray = Array.isArray(tags) ? tags : [];
-        // 使用 ARRAY 构造函数
-        const arrayPlaceholders = tagsArray.map(() => `$${paramIndex++}`).join(', ');
-        updateParts.push(`tags = ARRAY[${arrayPlaceholders}]::text[]`);
-        updateValues.push(...tagsArray);
+        const tagsJson = JSON.stringify(tagsArray);
+        updateParts.push(`tags = $${paramIndex++}::jsonb`);
+        updateValues.push(tagsJson);
       }
       if (status) {
         updateParts.push(`status = $${paramIndex++}`);
@@ -185,19 +199,46 @@ export default async function handler(req, res) {
       // 添加 id 参数
       updateValues.push(id);
       
-      const updateQuery = `
-        UPDATE blog_posts 
-        SET ${updateParts.join(', ')}
-        WHERE id = $${paramIndex}
-        RETURNING *
-      `;
-      
       let result;
       if (pool) {
+        const updateQuery = `
+          UPDATE blog_posts 
+          SET ${updateParts.join(', ')}
+          WHERE id = $${paramIndex}
+          RETURNING *
+        `;
         result = await pool.query(updateQuery, updateValues);
       } else {
-        // Vercel Postgres 不支持动态字段更新，需要特殊处理
-        throw new Error('Vercel Postgres 需要特殊处理动态字段更新');
+        // 使用 Vercel Postgres
+        // 构建动态SQL查询
+        let updateSql = 'UPDATE blog_posts SET ';
+        const setParts = [];
+        const values = [];
+        
+        if (slug) {
+          setParts.push(`slug = ${sql`${slug}`}`);
+        }
+        if (title) {
+          setParts.push(`title = ${sql`${title}`}`);
+        }
+        if (content) {
+          setParts.push(`content = ${sql`${content}`}`);
+        }
+        if (tags) {
+          const tagsJson = JSON.stringify(Array.isArray(tags) ? tags : []);
+          setParts.push(`tags = ${sql`${tagsJson}`}::jsonb`);
+        }
+        if (status) {
+          setParts.push(`status = ${sql`${status}`}`);
+        }
+        setParts.push('updated_at = CURRENT_TIMESTAMP');
+        
+        result = await sql`
+          UPDATE blog_posts 
+          SET ${sql.unsafe(setParts.join(', '))}
+          WHERE id = ${id}
+          RETURNING *
+        `;
       }
       const rows = result.rows || result;
 
