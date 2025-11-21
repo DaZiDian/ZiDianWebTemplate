@@ -24,7 +24,7 @@
           我的精选歌单
         </p>
         <p class="text-sm transition-colors" :class="isDark ? 'text-gray-300' : 'text-gray-600'">
-          Powered by Spotify
+          Powered by Spotify | 本站支持 Dolby ATMOS 杜比全景声
         </p>
       </div>
     </div>
