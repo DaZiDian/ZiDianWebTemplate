@@ -120,7 +120,7 @@
               专业数据恢复服务
             </p>
             <a
-              href="https://qm.qq.com/q/879940072"
+              href="https://qm.qq.com/q/xwSfZU52kE"
               target="_blank"
               rel="noopener noreferrer"
               class="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-medium transition-all duration-300"
