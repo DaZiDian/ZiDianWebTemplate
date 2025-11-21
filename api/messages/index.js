@@ -14,8 +14,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 使用Vercel Postgres（临时方案，直到配置好D1）
-    const { sql } = await import('@vercel/postgres');
+    // 使用Vercel Postgres
+    const postgres = await import('@vercel/postgres');
+    
+    // 优先使用 pooled connection，如果没有则使用 direct connection
+    let sql;
+    if (process.env.POSTGRES_URL) {
+      // 使用 pooled connection
+      sql = postgres.sql;
+    } else if (process.env.POSTGRES_URL_NON_POOLING) {
+      // 使用 direct connection
+      const client = postgres.createClient();
+      sql = client.sql.bind(client);
+    } else {
+      throw new Error('未配置 POSTGRES_URL 或 POSTGRES_URL_NON_POOLING 环境变量');
+    }
 
     // 初始化数据库表
     await sql`
