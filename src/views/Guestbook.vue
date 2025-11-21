@@ -128,20 +128,20 @@
         >
           <!-- 留言者信息 -->
           <div class="flex items-start gap-4 mb-4">
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-tokyo-night-blue to-tokyo-night-cyan flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-tokyo-night-blue to-tokyo-night-cyan flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden shadow-lg">
               <img v-if="message.avatar" :src="message.avatar" alt="avatar" class="w-full h-full object-cover" />
-              <span v-else>{{ message.nickname.charAt(0) }}</span>
+              <span v-else class="text-lg">{{ (message.nickname || '游').charAt(0) }}</span>
             </div>
             
             <div class="flex-1">
               <div class="flex items-center gap-3 mb-1">
-                <span class="font-bold text-tokyo-night-cyan">{{ message.nickname }}</span>
+                <span class="font-bold transition-colors" :class="isDark ? 'text-tokyo-night-cyan' : 'text-blue-600'">{{ message.nickname || '游客' }}</span>
                 <span v-if="message.gender" class="text-sm">
                   {{ message.gender === 'male' ? '👨' : message.gender === 'female' ? '👩' : '🧑' }}
                 </span>
               </div>
               
-              <div class="flex items-center gap-4 text-xs text-tokyo-night-dark5">
+              <div class="flex items-center gap-4 text-xs transition-colors" :class="isDark ? 'text-tokyo-night-dark5' : 'text-gray-500'">
                 <span v-if="message.birthday">🎂 {{ message.birthday }}</span>
                 <span v-if="message.email">📧 {{ message.email }}</span>
                 <span>🕐 {{ message.timestamp }}</span>
@@ -151,7 +151,9 @@
           
           <!-- 留言内容 -->
           <div class="pl-16">
-            <p class="text-tokyo-night-fg leading-relaxed whitespace-pre-wrap">{{ message.content }}</p>
+            <div class="glass-effect-inner rounded-lg p-4 mb-2" :class="isDark ? 'bg-tokyo-night-bg-highlight/30' : 'bg-white/20'">
+              <p class="leading-relaxed whitespace-pre-wrap transition-colors" :class="isDark ? 'text-tokyo-night-fg' : 'text-gray-800'">{{ message.content }}</p>
+            </div>
           </div>
         </div>
 
