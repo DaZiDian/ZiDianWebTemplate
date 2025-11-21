@@ -192,7 +192,13 @@ export default async function handler(req, res) {
         RETURNING *
       `;
       
-      const result = await db.query(updateQuery, updateValues);
+      let result;
+      if (pool) {
+        result = await pool.query(updateQuery, updateValues);
+      } else {
+        // Vercel Postgres 不支持动态字段更新，需要特殊处理
+        throw new Error('Vercel Postgres 需要特殊处理动态字段更新');
+      }
       const rows = result.rows || result;
 
       if (rows.length === 0) {
