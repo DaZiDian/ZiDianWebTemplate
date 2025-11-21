@@ -9,7 +9,7 @@ const routes = [
     path: '/',
     name: 'Home',
     component: Home,
-    meta: { title: '主页 - DaZiDian' }
+    meta: { title: 'DaZiDian - 春風若有憐花意，可否許我再少年？' }
   },
   {
     path: '/about',
@@ -35,6 +35,12 @@ const routes = [
     name: 'Guestbook',
     component: Guestbook,
     meta: { title: '留言板 - DaZiDian' }
+  },
+  {
+    path: '/shop',
+    name: 'Shops',
+    component: Shop,
+    meta: { title: '商铺 - DaZiDian' }
   }
 ]
 
