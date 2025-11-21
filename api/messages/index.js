@@ -35,12 +35,23 @@ export default async function handler(req, res) {
 
     // GET - 获取所有留言
     if (req.method === 'GET') {
-      const result = await sql`
-        SELECT * FROM messages 
-        ORDER BY created_at DESC 
-        LIMIT 100
-      `;
+      let result;
+      if (pool) {
+        result = await pool.query(`
+          SELECT * FROM messages 
+          ORDER BY created_at DESC 
+          LIMIT 100
+        `);
+      } else {
+        result = await sql`
+          SELECT * FROM messages 
+          ORDER BY created_at DESC 
+          LIMIT 100
+        `;
+      }
       const rows = result.rows || result;
+      
+      console.log('获取留言 - 返回数量:', rows.length); // 调试日志
       
       return res.status(200).json({
         success: true,
@@ -52,6 +63,8 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const { avatar, nickname, gender, birthday, email, content } = req.body;
 
+      console.log('接收到留言提交:', { nickname: nickname || '游客', content: content?.substring(0, 50) + '...' }); // 调试日志
+
       // 验证必填字段
       if (!content || content.trim() === '') {
         return res.status(400).json({
@@ -61,12 +74,23 @@ export default async function handler(req, res) {
       }
 
       // 插入留言
-      const result = await sql`
-        INSERT INTO messages (avatar, nickname, gender, birthday, email, content)
-        VALUES (${avatar || ''}, ${nickname || '游客'}, ${gender || ''}, ${birthday || null}, ${email || ''}, ${content})
-        RETURNING *
-      `;
+      let result;
+      if (pool) {
+        result = await pool.query(`
+          INSERT INTO messages (avatar, nickname, gender, birthday, email, content)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING *
+        `, [avatar || '', nickname || '游客', gender || '', birthday || null, email || '', content]);
+      } else {
+        result = await sql`
+          INSERT INTO messages (avatar, nickname, gender, birthday, email, content)
+          VALUES (${avatar || ''}, ${nickname || '游客'}, ${gender || ''}, ${birthday || null}, ${email || ''}, ${content})
+          RETURNING *
+        `;
+      }
       const rows = result.rows || result;
+
+      console.log('留言插入成功:', rows[0]?.id); // 调试日志
 
       return res.status(201).json({
         success: true,

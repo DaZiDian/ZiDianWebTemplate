@@ -214,11 +214,12 @@ const fetchMessages = async () => {
     isLoading.value = true
     const response = await axios.get(`${API_BASE}/messages`)
     console.log('留言API响应:', response.data) // 调试信息
-    if (response.data.success) {
+    if (response.data.success && Array.isArray(response.data.data)) {
       // 按创建时间倒序排序，显示最新的留言
       const processedMessages = response.data.data
         .map(msg => ({
           ...msg,
+          nickname: msg.nickname || '游客',
           timestamp: new Date(msg.created_at).toLocaleString('zh-CN')
         }))
         .sort((a, b) => {
@@ -229,13 +230,25 @@ const fetchMessages = async () => {
         })
       
       messages.value = processedMessages
-      console.log(`加载的留言数量: ${messages.value.length}`, messages.value)
+      console.log(`成功加载留言数量: ${messages.value.length}`)
+    } else {
+      console.warn('留言API返回数据格式错误:', response.data)
+      // 如果API返回格式错误但不是网络错误，保持现有数据
+      if (messages.value.length === 0) {
+        messages.value = []
+      }
     }
   } catch (error) {
     console.error('获取留言失败:', error)
+    console.error('错误状态码:', error.response?.status)
     console.error('错误详情:', error.response?.data || error.message)
-    // 保持现有留言，不要清空
-    // messages.value = []
+    
+    // 根据错误类型决定是否清空数据
+    if (error.response?.status === 404) {
+      console.error('留言API端点未找到 (404)')
+    } else if (!error.response || error.response.status >= 500) {
+      console.log('网络错误或服务器错误，保持现有留言数据')
+    }
   } finally {
     isLoading.value = false
   }

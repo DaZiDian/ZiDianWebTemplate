@@ -130,27 +130,39 @@ const fetchArticles = async () => {
     isLoading.value = true
     const response = await axios.get(`${API_BASE}/blog`)
     console.log('博客API响应:', response.data) // 调试信息
-    if (response.data.success) {
+    if (response.data.success && Array.isArray(response.data.data)) {
       // 显示所有文章的状态信息用于调试
       response.data.data.forEach(post => {
         console.log(`文章: ${post.title}, 状态: "${post.status}", ID: ${post.id}`)
       })
       
-      // 只显示已发布的文章，按更新时间倒序
-      const publishedArticles = response.data.data.filter(post => {
-        console.log(`过滤检查 - 文章: ${post.title}, 状态: "${post.status}", 是否已发布: ${post.status === 'published'}`)
-        return post.status === 'published'
-      })
-      
-      articles.value = publishedArticles
-        .map(post => ({
-          ...post,
-          slug: post.slug,
-          title: post.title,
-          date: post.created_at ? new Date(post.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-          location: '中国 山东 青岛',
-          content: post.content ? (post.content.length > 200 ? post.content.substring(0, 200) + '...' : post.content) : ''
-        }))
+      // 显示所有文章，包括草稿（管理员可以看到）
+      const allArticles = response.data.data
+        .filter(post => post.status === 'published') // 只显示已发布的文章
+        .map(post => {
+          // 解析tags（可能是JSONB格式）
+          let parsedTags = [];
+          try {
+            if (typeof post.tags === 'string') {
+              parsedTags = JSON.parse(post.tags);
+            } else if (Array.isArray(post.tags)) {
+              parsedTags = post.tags;
+            }
+          } catch (e) {
+            console.warn('解析tags失败:', e);
+            parsedTags = [];
+          }
+          
+          return {
+            ...post,
+            tags: parsedTags,
+            slug: post.slug,
+            title: post.title,
+            date: post.created_at ? new Date(post.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            location: '中国 山东 青岛',
+            content: post.content ? (post.content.length > 200 ? post.content.substring(0, 200) + '...' : post.content) : ''
+          };
+        })
         .sort((a, b) => {
           // 按更新时间倒序排序
           const dateA = new Date(a.updated_at || a.created_at || 0)
@@ -158,15 +170,24 @@ const fetchArticles = async () => {
           return dateB - dateA
         })
       
+      articles.value = allArticles
       console.log(`最终显示的文章数量: ${articles.value.length}`, articles.value)
       
       // 计算分页
       totalPages.value = Math.ceil(articles.value.length / 10) || 1
+    } else {
+      console.warn('API返回数据格式错误或为空')
+      articles.value = []
     }
   } catch (error) {
     console.error('加载文章失败:', error)
-    // 保持现有文章，不要清空
-    // articles.value = []
+    console.error('错误详情:', error.response?.data || error.message)
+    // 保持现有文章，不要清空（如果是网络错误）
+    if (!error.response || error.response.status >= 500) {
+      console.log('网络错误或服务器错误，保持现有数据')
+    } else {
+      articles.value = []
+    }
   } finally {
     isLoading.value = false
   }
