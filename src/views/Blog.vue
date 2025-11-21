@@ -129,10 +129,20 @@ const fetchArticles = async () => {
   try {
     isLoading.value = true
     const response = await axios.get(`${API_BASE}/blog`)
+    console.log('博客API响应:', response.data) // 调试信息
     if (response.data.success) {
+      // 显示所有文章的状态信息用于调试
+      response.data.data.forEach(post => {
+        console.log(`文章: ${post.title}, 状态: "${post.status}", ID: ${post.id}`)
+      })
+      
       // 只显示已发布的文章，按更新时间倒序
-      articles.value = response.data.data
-        .filter(post => post.status === 'published')
+      const publishedArticles = response.data.data.filter(post => {
+        console.log(`过滤检查 - 文章: ${post.title}, 状态: "${post.status}", 是否已发布: ${post.status === 'published'}`)
+        return post.status === 'published'
+      })
+      
+      articles.value = publishedArticles
         .map(post => ({
           ...post,
           slug: post.slug,
@@ -148,13 +158,15 @@ const fetchArticles = async () => {
           return dateB - dateA
         })
       
+      console.log(`最终显示的文章数量: ${articles.value.length}`, articles.value)
+      
       // 计算分页
       totalPages.value = Math.ceil(articles.value.length / 10) || 1
     }
   } catch (error) {
     console.error('加载文章失败:', error)
-    // 如果API失败，显示空数组
-    articles.value = []
+    // 保持现有文章，不要清空
+    // articles.value = []
   } finally {
     isLoading.value = false
   }

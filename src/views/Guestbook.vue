@@ -213,9 +213,10 @@ const fetchMessages = async () => {
   try {
     isLoading.value = true
     const response = await axios.get(`${API_BASE}/messages`)
+    console.log('留言API响应:', response.data) // 调试信息
     if (response.data.success) {
       // 按创建时间倒序排序，显示最新的留言
-      messages.value = response.data.data
+      const processedMessages = response.data.data
         .map(msg => ({
           ...msg,
           timestamp: new Date(msg.created_at).toLocaleString('zh-CN')
@@ -226,11 +227,15 @@ const fetchMessages = async () => {
           const dateB = new Date(b.created_at || 0)
           return dateB - dateA
         })
+      
+      messages.value = processedMessages
+      console.log(`加载的留言数量: ${messages.value.length}`, messages.value)
     }
   } catch (error) {
     console.error('获取留言失败:', error)
-    // 如果 API 失败，显示空数组
-    messages.value = []
+    console.error('错误详情:', error.response?.data || error.message)
+    // 保持现有留言，不要清空
+    // messages.value = []
   } finally {
     isLoading.value = false
   }
