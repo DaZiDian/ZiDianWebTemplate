@@ -4,6 +4,12 @@ import About from '../views/About.vue'
 import Blog from '../views/Blog.vue'
 import Guestbook from '../views/Guestbook.vue'
 import Shop from '../views/Shop.vue'
+import BlogAdmin from '../views/BlogAdmin.vue'
+
+// 动态导入博客文章
+const blogComponents = {
+  'introduce-my-blog': () => import('../views/Blogs/Introduce_My_Blog.vue')
+}
 
 const routes = [
   {
@@ -42,6 +48,24 @@ const routes = [
     name: 'Shops',
     component: Shop,
     meta: { title: '商铺 - DaZiDian' }
+  },
+  {
+    path: '/blog/:slug',
+    name: 'BlogPost',
+    component: (to) => {
+      const slug = to.params.slug
+      if (blogComponents[slug]) {
+        return blogComponents[slug]()
+      }
+      return import('../views/NotFound.vue')
+    },
+    meta: { title: (route) => `${route.params.slug} - DaZiDian` }
+  },
+  {
+    path: '/admin/blog',
+    name: 'BlogAdmin',
+    component: BlogAdmin,
+    meta: { title: '博客管理 - DaZiDian' }
   }
 ]
 

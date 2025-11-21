@@ -135,32 +135,7 @@
         </div>
 
         <!-- 音乐盒 -->
-        <div class="glass-effect rounded-3xl p-8 card-hover scroll-animate scroll-animate-delay-4">
-          <h2 class="text-2xl font-bold mb-6 flex items-center justify-between transition-colors" :class="isDark ? 'text-tokyo-night-cyan' : 'text-blue-600'">
-            <span>🎵 Music Box</span>
-          </h2>
-          
-          <div class="space-y-4">
-            <div class="aspect-square rounded-xl flex items-center justify-center text-white text-6xl border-theme music-box-bg">
-              🎵
-            </div>
-            
-            <div class="text-center">
-              <p class="font-medium transition-colors" :class="isDark ? 'text-white' : 'text-gray-800'">音乐播放器</p>
-              <p class="text-sm transition-colors" :class="isDark ? 'text-gray-300' : 'text-gray-600'">Coming Soon...</p>
-            </div>
-            
-            <div class="space-y-2">
-              <div class="h-2 rounded-full overflow-hidden transition-colors" :class="isDark ? 'bg-tokyo-night-bg-highlight' : 'bg-gray-300'">
-                <div class="h-full w-0 progress-bar"></div>
-              </div>
-              <div class="flex justify-between text-xs transition-colors" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
-                <span>0:00</span>
-                <span>0:00</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <SpotifyPlayer />
       </div>
     </div>
   </div>
@@ -170,6 +145,7 @@
 import { ref } from 'vue'
 import { useTheme } from '../composables/useTheme'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
+import SpotifyPlayer from '../components/SpotifyPlayer.vue'
 
 const { isDark } = useTheme()
 useScrollAnimation()

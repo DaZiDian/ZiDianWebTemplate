@@ -3,10 +3,26 @@
     <div class="container mx-auto px-4">
       <!-- 页面标题 -->
       <div class="text-center mb-12 animate-fade-in">
-        <h1 class="text-5xl font-bold mb-4 title-reveal">
-          文章 | BLOG
-        </h1>
-        <p class="transition-colors" :class="isDark ? 'text-gray-300' : 'text-gray-600'">分享我的想法和经验</p>
+        <div class="flex justify-between items-center mb-8">
+          <div class="flex-1"></div>
+          <div class="text-center">
+            <h1 class="text-5xl font-bold mb-4 title-reveal">
+              文章 | BLOG
+            </h1>
+            <p class="transition-colors" :class="isDark ? 'text-gray-300' : 'text-gray-600'">分享我的想法和经验</p>
+          </div>
+          <div class="flex-1 flex justify-end">
+            <router-link 
+              to="/admin/blog"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105"
+              :class="isDark 
+                ? 'bg-tokyo-night-bg-highlight text-tokyo-night-cyan border border-tokyo-night-blue hover:bg-tokyo-night-blue hover:text-white' 
+                : 'bg-blue-100 text-blue-600 border border-blue-300 hover:bg-blue-600 hover:text-white'"
+            >
+              📝 管理
+            </router-link>
+          </div>
+        </div>
       </div>
 
       <!-- 文章列表 -->
@@ -18,9 +34,15 @@
           :class="`scroll-animate-delay-${Math.min(index + 1, 6)}`"
         >
           <!-- 标题 -->
-          <h2 class="text-3xl font-bold mb-4 text-tokyo-night-cyan hover:text-tokyo-night-blue transition-colors cursor-pointer">
-            {{ article.title }}
-          </h2>
+          <router-link 
+            :to="`/blog/${article.slug}`" 
+            class="block"
+          >
+            <h2 class="text-3xl font-bold mb-4 transition-colors cursor-pointer hover:scale-105 transform"
+                :class="isDark ? 'text-tokyo-night-cyan hover:text-tokyo-night-blue' : 'text-blue-600 hover:text-blue-700'">
+              {{ article.title }}
+            </h2>
+          </router-link>
           
           <!-- 发布时间 -->
           <div class="flex items-center gap-4 mb-6 text-sm text-tokyo-night-dark5">
@@ -45,9 +67,15 @@
           
           <!-- 阅读更多按钮 -->
           <div class="mt-6 flex justify-end">
-            <button class="px-6 py-2 bg-gradient-to-r from-tokyo-night-blue to-tokyo-night-cyan text-white rounded-full hover:shadow-lg transition-all duration-300 hover:scale-105">
+            <router-link 
+              :to="`/blog/${article.slug}`"
+              class="inline-block px-6 py-2 rounded-full text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              :class="isDark 
+                ? 'bg-gradient-to-r from-tokyo-night-blue to-tokyo-night-cyan' 
+                : 'bg-gradient-to-r from-blue-600 to-blue-700'"
+            >
               阅读更多 →
-            </button>
+            </router-link>
           </div>
         </article>
 
@@ -86,19 +114,23 @@ const { isDark } = useTheme()
 const currentPage = ref(1)
 const totalPages = ref(1)
 
-// 示例文章数据 - 实际使用时可以从后端API获取
+// 博客文章数据 - 包含已发布的文章
 const articles = ref([
   {
-    title: '示例文章标题',
-    date: '2024-11-20',
+    title: '欢迎来到我的博客',
+    slug: 'introduce-my-blog',
+    date: '2024-11-21',
     location: '中国 山东 青岛',
-    content: '这是一篇示例文章。在实际使用时，您可以通过后台管理系统添加、编辑和删除文章。支持Markdown格式，可以插入图片、代码块等丰富内容。'
+    content: '欢迎来到我的个人博客！这里是我分享技术见解、学习心得和生活感悟的地方。本篇文章将介绍这个博客网站的技术栈、主要功能和设计理念。',
+    tags: ['博客', '个人网站', 'Vue3', '前端开发']
   },
   {
-    title: '我的技术分享',
-    date: '2024-11-15',
+    title: '即将推出更多内容',
+    slug: 'coming-soon',
+    date: '2024-11-20',
     location: '中国 山东 青岛',
-    content: '在这里分享我在信息安全、渗透测试、数据恢复等方面的经验和心得。技术是不断进步的，让我们一起成长。'
+    content: '正在准备更多精彩的技术文章和学习笔记，包括前端开发、信息安全、数据恢复等方面的内容。敬请期待！',
+    tags: ['预告', '技术分享']
   }
 ])
 </script>
