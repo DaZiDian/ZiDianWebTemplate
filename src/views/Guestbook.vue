@@ -122,13 +122,13 @@
         <div 
           v-for="(message, index) in messages" 
           :key="index"
-          class="glass-effect rounded-2xl p-6 card-hover scroll-animate"
+          class="guestbook-message-card rounded-2xl p-6 card-hover scroll-animate"
           :class="`scroll-animate-delay-${Math.min(index + 1, 6)}`"
           :style="{ animationDelay: `${index * 0.1}s` }"
         >
           <div class="flex items-start gap-4">
             <!-- 头像 -->
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-tokyo-night-blue to-tokyo-night-cyan flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-tokyo-night-blue to-tokyo-night-cyan flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden shadow-lg">
               <img v-if="message.avatar" :src="message.avatar" alt="avatar" class="w-full h-full object-cover" />
               <span v-else class="text-sm">{{ (message.nickname || '游').charAt(0) }}</span>
             </div>
@@ -136,19 +136,19 @@
             <!-- 留言内容 -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
-                <span class="font-semibold text-sm title-text">{{ message.nickname || '游客' }}</span>
+                <span class="guestbook-nickname">{{ message.nickname || '游客' }}</span>
                 <span v-if="message.gender" class="text-xs">
                   {{ message.gender === 'male' ? '👨' : message.gender === 'female' ? '👩' : '🧑' }}
                 </span>
-                <span class="text-xs secondary-text">{{ message.timestamp }}</span>
+                <span class="guestbook-timestamp">{{ message.timestamp }}</span>
               </div>
               
               <div class="mt-2">
-                <p class="text-sm leading-relaxed whitespace-pre-wrap content-text">{{ message.content }}</p>
+                <p class="guestbook-content">{{ message.content }}</p>
               </div>
               
               <!-- 额外信息（可选显示） -->
-              <div v-if="message.birthday || message.email" class="flex items-center gap-3 mt-2 text-xs secondary-text">
+              <div v-if="message.birthday || message.email" class="guestbook-extra flex items-center gap-3">
                 <span v-if="message.birthday">🎂 {{ message.birthday }}</span>
                 <span v-if="message.email">📧 {{ message.email }}</span>
               </div>

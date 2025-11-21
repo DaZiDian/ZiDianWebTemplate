@@ -34,7 +34,7 @@
           v-else
           v-for="(article, index) in articles" 
           :key="article.id || article.slug || index"
-          class="glass-effect rounded-2xl p-6 card-hover scroll-animate"
+          class="blog-article-card rounded-2xl p-6 card-hover scroll-animate"
           :class="`scroll-animate-delay-${Math.min(index + 1, 6)}`"
         >
           <div class="flex items-start justify-between gap-4">
@@ -44,13 +44,13 @@
                 :to="`/blog/${article.slug}`" 
                 class="block mb-2"
               >
-                <h2 class="text-2xl font-bold transition-colors cursor-pointer hover:opacity-80 title-text">
+                <h2 class="blog-article-title text-2xl transition-colors cursor-pointer hover:opacity-80">
                   {{ article.title }}
                 </h2>
               </router-link>
               
               <!-- 发布时间和状态信息 -->
-              <div class="flex items-center gap-3 text-sm secondary-text mb-3 flex-wrap">
+              <div class="blog-article-meta flex items-center gap-3 flex-wrap">
                 <span>{{ article.date }}</span>
                 <span class="px-2 py-0.5 rounded text-xs font-medium"
                   :class="isDark 
@@ -64,8 +64,8 @@
               
               <!-- 正文预览 -->
               <div class="prose prose-sm max-w-none leading-relaxed mb-3">
-                <p v-if="article.content" class="text-sm content-text line-clamp-2">{{ article.content }}</p>
-                <p v-else class="text-xs italic opacity-60 secondary-text">暂无内容预览...</p>
+                <p v-if="article.content" class="blog-article-content line-clamp-2">{{ article.content }}</p>
+                <p v-else class="blog-article-meta text-xs italic opacity-60">暂无内容预览...</p>
               </div>
             </div>
             
