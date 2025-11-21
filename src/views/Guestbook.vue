@@ -122,9 +122,9 @@
         <div 
           v-for="(message, index) in messages" 
           :key="index"
-          class="guestbook-message-card rounded-2xl p-6 card-hover scroll-animate"
+          class="guestbook-message-card rounded-2xl p-6 card-hover scroll-animate relative"
           :class="`scroll-animate-delay-${Math.min(index + 1, 6)}`"
-          :style="{ animationDelay: `${index * 0.1}s` }"
+          :style="{ animationDelay: `${index * 0.1}s`, zIndex: 1 }"
         >
           <div class="flex items-start gap-4">
             <!-- 头像 -->
