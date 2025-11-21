@@ -13,17 +13,30 @@ export default async function handler(req, res) {
   try {
     const postgres = await import('@vercel/postgres');
     
-    // 优先使用 pooled connection，如果没有则使用 direct connection
+    // 检测连接类型并选择合适的连接方式
     let sql;
-    if (process.env.POSTGRES_URL) {
-      // 使用 pooled connection
-      sql = postgres.sql;
-    } else if (process.env.POSTGRES_URL_NON_POOLING) {
-      // 使用 direct connection
+    const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
+    
+    if (!connectionString) {
+      throw new Error('未配置 POSTGRES_URL 或 POSTGRES_URL_NON_POOLING 环境变量');
+    }
+    
+    // 检查是否是 Prisma Postgres 或 direct connection
+    // Prisma Postgres 使用 db.prisma.io 或 prisma-data.net
+    // 或者检查连接字符串是否包含 pgbouncer=true（pooled connection 标识符）
+    const isPrismaPostgres = connectionString.includes('db.prisma.io') || 
+                             connectionString.includes('prisma-data.net') ||
+                             connectionString.includes('prisma+postgres://');
+    const isPooledConnection = connectionString.includes('?pgbouncer=true') || 
+                               connectionString.includes('&pgbouncer=true');
+    
+    if (process.env.POSTGRES_URL_NON_POOLING || isPrismaPostgres || !isPooledConnection) {
+      // 使用 direct connection（适用于 Prisma Postgres 或明确标记为 non-pooling 的连接）
       const client = postgres.createClient();
       sql = client.sql.bind(client);
     } else {
-      throw new Error('未配置 POSTGRES_URL 或 POSTGRES_URL_NON_POOLING 环境变量');
+      // 使用 pooled connection（标准 Vercel Postgres）
+      sql = postgres.sql;
     }
 
     // 初始化数据库表
@@ -104,9 +117,10 @@ export default async function handler(req, res) {
 
       // 插入新文章
       const tagsArray = Array.isArray(tags) ? tags : [];
+      // 使用 PostgreSQL 数组类型而不是 JSONB
       const { rows } = await sql`
         INSERT INTO blog_posts (slug, title, content, tags, status)
-        VALUES (${slug}, ${title}, ${content}, ${JSON.stringify(tagsArray)}::jsonb, ${status || 'draft'})
+        VALUES (${slug}, ${title}, ${content}, ${sql.array(tagsArray)}, ${status || 'draft'})
         RETURNING *
       `;
 
@@ -146,7 +160,10 @@ export default async function handler(req, res) {
       if (slug) updateFields.push(sql`slug = ${slug}`);
       if (title) updateFields.push(sql`title = ${title}`);
       if (content) updateFields.push(sql`content = ${content}`);
-      if (tags) updateFields.push(sql`tags = ${JSON.stringify(tags)}::jsonb`);
+      if (tags) {
+        const tagsArray = Array.isArray(tags) ? tags : [];
+        updateFields.push(sql`tags = ${sql.array(tagsArray)}`);
+      }
       if (status) updateFields.push(sql`status = ${status}`);
       updateFields.push(sql`updated_at = CURRENT_TIMESTAMP`);
 
