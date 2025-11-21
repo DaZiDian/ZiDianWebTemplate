@@ -11,33 +11,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const postgres = await import('@vercel/postgres');
-    
-    // 检测连接类型并选择合适的连接方式
-    let sql;
-    const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
-    
-    if (!connectionString) {
-      throw new Error('未配置 POSTGRES_URL 或 POSTGRES_URL_NON_POOLING 环境变量');
-    }
-    
-    // 检查是否是 Prisma Postgres 或 direct connection
-    // Prisma Postgres 使用 db.prisma.io 或 prisma-data.net
-    // 或者检查连接字符串是否包含 pgbouncer=true（pooled connection 标识符）
-    const isPrismaPostgres = connectionString.includes('db.prisma.io') || 
-                             connectionString.includes('prisma-data.net') ||
-                             connectionString.includes('prisma+postgres://');
-    const isPooledConnection = connectionString.includes('?pgbouncer=true') || 
-                               connectionString.includes('&pgbouncer=true');
-    
-    if (process.env.POSTGRES_URL_NON_POOLING || isPrismaPostgres || !isPooledConnection) {
-      // 使用 direct connection（适用于 Prisma Postgres 或明确标记为 non-pooling 的连接）
-      const client = postgres.createClient();
-      sql = client.sql.bind(client);
-    } else {
-      // 使用 pooled connection（标准 Vercel Postgres）
-      sql = postgres.sql;
-    }
+    // 使用统一的数据库连接工具
+    const { getDatabaseClient } = await import('./utils/db.js');
+    const db = await getDatabaseClient();
+    const sql = db.sql;
 
     // 初始化数据库表
     await sql`
@@ -59,11 +36,12 @@ export default async function handler(req, res) {
 
       if (slug) {
         // 获取单篇文章
-        const { rows } = await sql`
+        const result = await sql`
           SELECT * FROM blog_posts 
           WHERE slug = ${slug}
           LIMIT 1
         `;
+        const rows = result.rows || result;
         
         if (rows.length === 0) {
           return res.status(404).json({
@@ -78,11 +56,12 @@ export default async function handler(req, res) {
         });
       } else {
         // 获取所有文章
-        const { rows } = await sql`
+        const result = await sql`
           SELECT id, slug, title, tags, status, created_at, updated_at
           FROM blog_posts 
           ORDER BY updated_at DESC
         `;
+        const rows = result.rows || result;
         
         return res.status(200).json({
           success: true,
@@ -118,11 +97,12 @@ export default async function handler(req, res) {
       // 插入新文章
       const tagsArray = Array.isArray(tags) ? tags : [];
       // 使用 PostgreSQL 数组类型而不是 JSONB
-      const { rows } = await sql`
+      const result = await sql`
         INSERT INTO blog_posts (slug, title, content, tags, status)
         VALUES (${slug}, ${title}, ${content}, ${sql.array(tagsArray)}, ${status || 'draft'})
         RETURNING *
       `;
+      const rows = result.rows || result;
 
       return res.status(201).json({
         success: true,
@@ -143,9 +123,10 @@ export default async function handler(req, res) {
 
       // 如果更新slug，检查新slug是否已被其他文章使用
       if (slug) {
-        const { rows: existing } = await sql`
+        const existingResult = await sql`
           SELECT id FROM blog_posts WHERE slug = ${slug} AND id != ${id} LIMIT 1
         `;
+        const existing = existingResult.rows || existingResult;
 
         if (existing.length > 0) {
           return res.status(409).json({
@@ -167,12 +148,13 @@ export default async function handler(req, res) {
       if (status) updateFields.push(sql`status = ${status}`);
       updateFields.push(sql`updated_at = CURRENT_TIMESTAMP`);
 
-      const { rows } = await sql`
+      const result = await sql`
         UPDATE blog_posts 
         SET ${sql.join(updateFields, sql`, `)}
         WHERE id = ${id}
         RETURNING *
       `;
+      const rows = result.rows || result;
 
       if (rows.length === 0) {
         return res.status(404).json({
@@ -198,9 +180,10 @@ export default async function handler(req, res) {
         });
       }
 
-      const { rowCount } = await sql`
+      const result = await sql`
         DELETE FROM blog_posts WHERE id = ${id}
       `;
+      const rowCount = result.rowCount || (result.rows ? result.rows.length : 0);
 
       if (rowCount === 0) {
         return res.status(404).json({
@@ -223,10 +206,18 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('API Error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error code:', error.code);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code
+    });
     return res.status(500).json({
       success: false,
       error: '服务器错误，请稍后再试',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      errorCode: error.code || 'UNKNOWN'
     });
   }
 }

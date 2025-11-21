@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@vercel/postgres": "^0.5.1",
+    "pg": "^8.11.3",
     "axios": "^1.6.7",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
