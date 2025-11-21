@@ -144,6 +144,7 @@ const navLinks = [
   { name: '个人作品', path: '/works' },
   { name: '文章', path: '/blog' },
   { name: '留言板', path: '/guestbook' },
+  { name: '商铺', path: '/shop' },
 ]
 
 const handleScroll = () => {
