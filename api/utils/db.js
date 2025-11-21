@@ -44,16 +44,20 @@ export async function getDatabaseClient() {
       const text = strings.reduce((acc, str, i) => {
         if (i < values.length) {
           const value = values[i];
-          // 如果是 sql 模板标签的结果（用于 sql.join），直接插入
-          if (value && typeof value === 'object' && value.text && value.values) {
-            // 这是一个嵌套的 sql 查询片段
+          // 如果是 sql.join 返回的对象（用于动态 SQL 片段）
+          if (value && typeof value === 'object' && value.text !== undefined && value.values !== undefined) {
+            // 这是一个 sql.join 返回的片段
             const nestedText = value.text.replace(/\$\d+/g, () => `$${paramIndex++}`);
             processedValues.push(...value.values);
             return acc + str + nestedText;
           } else if (Array.isArray(value)) {
-            // PostgreSQL 数组格式
-            processedValues.push(value);
-            return acc + str + `$${paramIndex++}::text[]`;
+            // PostgreSQL 数组格式 - 使用 ARRAY 构造函数
+            // 将数组转换为 PostgreSQL 数组格式
+            const arrayPlaceholders = value.map(() => `$${paramIndex++}`).join(', ');
+            processedValues.push(...value);
+            return acc + str + `ARRAY[${arrayPlaceholders}]::text[]`;
+          } else if (value === null || value === undefined) {
+            return acc + str + 'NULL';
           } else {
             processedValues.push(value);
             return acc + str + `$${paramIndex++}`;
@@ -84,21 +88,37 @@ export async function getDatabaseClient() {
       let paramIndex = 1;
       
       fragments.forEach((fragment, index) => {
-        if (fragment && typeof fragment === 'object' && fragment.text && fragment.values) {
-          // 这是一个 sql 模板标签的结果
-          const fragmentText = fragment.text.replace(/\$\d+/g, () => `$${paramIndex++}`);
-          combinedText += fragmentText;
-          combinedValues.push(...fragment.values);
+        if (fragment && typeof fragment === 'object') {
+          // 检查是否是 sql 模板标签的结果
+          if (fragment.text !== undefined && fragment.values !== undefined) {
+            // 这是 sql.join 返回的对象
+            const fragmentText = fragment.text.replace(/\$\d+/g, () => `$${paramIndex++}`);
+            combinedText += fragmentText;
+            combinedValues.push(...fragment.values);
+          } else if (fragment.query) {
+            // 这是 pg 查询对象，提取 text 和 values
+            const fragmentText = fragment.query.text.replace(/\$\d+/g, () => `$${paramIndex++}`);
+            combinedText += fragmentText;
+            combinedValues.push(...(fragment.query.values || []));
+          }
         } else if (typeof fragment === 'string') {
           combinedText += fragment;
         }
         
         if (index < fragments.length - 1) {
           // 添加分隔符
-          if (separator && typeof separator === 'object' && separator.text) {
-            const sepText = separator.text.replace(/\$\d+/g, () => `$${paramIndex++}`);
-            combinedText += sepText;
-            combinedValues.push(...(separator.values || []));
+          if (separator && typeof separator === 'object') {
+            if (separator.text !== undefined) {
+              // sql.join 返回的对象
+              const sepText = separator.text.replace(/\$\d+/g, () => `$${paramIndex++}`);
+              combinedText += sepText;
+              combinedValues.push(...(separator.values || []));
+            } else if (separator.query) {
+              // pg 查询对象
+              const sepText = separator.query.text.replace(/\$\d+/g, () => `$${paramIndex++}`);
+              combinedText += sepText;
+              combinedValues.push(...(separator.query.values || []));
+            }
           } else {
             combinedText += separator || ', ';
           }
