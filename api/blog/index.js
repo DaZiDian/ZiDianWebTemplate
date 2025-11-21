@@ -1,4 +1,6 @@
 // Vercel Serverless Function - 博客文章 API
+import { authenticateRequest } from '../utils/auth.js';
+
 export default async function handler(req, res) {
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,6 +10,17 @@ export default async function handler(req, res) {
   // 处理 OPTIONS 预检请求
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // 对于需要认证的操作（POST, PUT, DELETE），验证 token
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    const authResult = authenticateRequest(req);
+    if (!authResult) {
+      return res.status(401).json({
+        success: false,
+        error: '未授权，请先登录',
+      });
+    }
   }
 
   try {

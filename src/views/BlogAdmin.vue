@@ -160,11 +160,24 @@ const editingPost = ref(null)
 // 博客文章数据
 const blogPosts = ref([])
 
+// 获取认证token
+const getAuthToken = () => {
+  return localStorage.getItem('blog_admin_token')
+}
+
+// 创建带认证头的axios实例
+const createAuthHeaders = () => {
+  const token = getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 // 加载文章列表
 const fetchPosts = async () => {
   try {
     isLoading.value = true
-    const response = await axios.get(`${API_BASE}/blog`)
+    const response = await axios.get(`${API_BASE}/blog`, {
+      headers: createAuthHeaders()
+    })
     if (response.data.success) {
       blogPosts.value = response.data.data.map(post => ({
         ...post,
@@ -174,7 +187,13 @@ const fetchPosts = async () => {
     }
   } catch (error) {
     console.error('加载文章失败:', error)
-    alert('加载文章失败，请稍后重试')
+    // 如果是401错误，说明token失效，需要重新登录
+    if (error.response?.status === 401) {
+      logout()
+      alert('登录已过期，请重新登录')
+    } else {
+      alert('加载文章失败，请稍后重试')
+    }
   } finally {
     isLoading.value = false
   }
@@ -184,7 +203,7 @@ const fetchPosts = async () => {
 onMounted(async () => {
   const authToken = localStorage.getItem('blog_admin_token')
   if (authToken) {
-    // 验证token有效性
+    // 验证token有效性（简单检查，实际验证在API端）
     isAuthenticated.value = true
     await fetchPosts()
   }
@@ -196,18 +215,23 @@ const handleAuth = async () => {
   authError.value = ''
   
   try {
-    // 简单的密码验证 - 实际项目中应该使用更安全的方式
-    if (password.value === 'dazidian2024') {
-      const token = 'auth_token_' + Date.now()
-      localStorage.setItem('blog_admin_token', token)
+    // 调用登录API进行认证
+    const response = await axios.post(`${API_BASE}/auth/login`, {
+      password: password.value
+    })
+    
+    if (response.data.success) {
+      // 保存JWT token
+      localStorage.setItem('blog_admin_token', response.data.data.token)
       isAuthenticated.value = true
       password.value = ''
       await fetchPosts()
     } else {
-      authError.value = '密码错误，请重试'
+      authError.value = response.data.error || '密码错误，请重试'
     }
   } catch (error) {
-    authError.value = '认证失败，请稍后重试'
+    console.error('登录失败:', error)
+    authError.value = error.response?.data?.error || '认证失败，请稍后重试'
   } finally {
     isLoading.value = false
   }
@@ -226,7 +250,9 @@ const editPost = async (post) => {
   try {
     isLoading.value = true
     // 获取完整文章内容
-    const response = await axios.get(`${API_BASE}/blog?slug=${post.slug}`)
+    const response = await axios.get(`${API_BASE}/blog?slug=${post.slug}`, {
+      headers: createAuthHeaders()
+    })
     if (response.data.success) {
       editingPost.value = {
         ...response.data.data,
@@ -256,6 +282,8 @@ const savePost = async (postData) => {
         content: postData.content,
         tags: postData.tags,
         status: postData.status
+      }, {
+        headers: createAuthHeaders()
       })
       
       if (response.data.success) {
@@ -274,6 +302,8 @@ const savePost = async (postData) => {
         content: postData.content,
         tags: postData.tags,
         status: postData.status
+      }, {
+        headers: createAuthHeaders()
       })
       
       if (response.data.success) {
@@ -304,7 +334,9 @@ const deletePost = async (post) => {
   
   try {
     isLoading.value = true
-    const response = await axios.delete(`${API_BASE}/blog?id=${post.id}`)
+    const response = await axios.delete(`${API_BASE}/blog?id=${post.id}`, {
+      headers: createAuthHeaders()
+    })
     
     if (response.data.success) {
       alert('文章已删除')

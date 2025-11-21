@@ -30,8 +30,9 @@
   },
   "dependencies": {
     "@vercel/postgres": "^0.5.1",
-    "pg": "^8.11.3",
     "axios": "^1.6.7",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
