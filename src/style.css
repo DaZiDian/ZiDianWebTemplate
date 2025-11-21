@@ -551,6 +551,8 @@ html {
   overflow: hidden;
 }
 
+.dark .guestbook-timestamp {
+  color: #a9b1d6 !important;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
 }
 
