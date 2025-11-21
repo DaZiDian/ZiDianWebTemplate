@@ -34,19 +34,31 @@ export default async function handler(req, res) {
         )
       `);
       
-      // 检查并更新tags列类型（如果需要）
+      // 检查并更新tags列类型（如果需要）- 简化迁移逻辑
       try {
-        await pool.query(`
-          ALTER TABLE blog_posts 
-          ALTER COLUMN tags TYPE JSONB 
-          USING CASE 
-            WHEN tags IS NULL THEN '[]'::jsonb 
-            WHEN array_length(tags, 1) IS NULL THEN '[]'::jsonb 
-            ELSE array_to_json(tags)::jsonb 
-          END
+        // 先检查当前tags列的类型
+        const typeCheckResult = await pool.query(`
+          SELECT data_type 
+          FROM information_schema.columns 
+          WHERE table_name = 'blog_posts' AND column_name = 'tags'
         `);
+        
+        if (typeCheckResult.rows.length > 0) {
+          const currentType = typeCheckResult.rows[0].data_type;
+          console.log('当前tags列类型:', currentType);
+          
+          // 如果是ARRAY类型，转换为JSONB
+          if (currentType === 'ARRAY') {
+            await pool.query(`
+              ALTER TABLE blog_posts 
+              ALTER COLUMN tags TYPE JSONB 
+              USING COALESCE(array_to_json(tags), '[]'::jsonb)
+            `);
+            console.log('成功将tags列从TEXT[]转换为JSONB');
+          }
+        }
       } catch (alterError) {
-        // 如果列已经是JSONB类型或其他错误，继续执行
+        // 如果迁移失败，记录但继续执行
         console.log('tags列类型更新跳过或失败:', alterError.message);
       }
     } else {

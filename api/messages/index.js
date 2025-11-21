@@ -18,6 +18,7 @@ export default async function handler(req, res) {
     const { getDatabaseClient } = await import('../utils/db.js');
     const db = await getDatabaseClient();
     const sql = db.sql;
+    const pool = db.pool;
 
     // 初始化数据库表
     await sql`
