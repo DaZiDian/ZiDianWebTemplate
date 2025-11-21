@@ -108,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
 import { useTheme } from '../composables/useTheme'
 import axios from 'axios'
@@ -162,6 +162,14 @@ const fetchArticles = async () => {
 
 onMounted(() => {
   fetchArticles()
+  
+  // 监听博客更新事件，自动刷新文章列表
+  window.addEventListener('blog-updated', fetchArticles)
+})
+
+onUnmounted(() => {
+  // 清理事件监听器
+  window.removeEventListener('blog-updated', fetchArticles)
 })
 </script>
 

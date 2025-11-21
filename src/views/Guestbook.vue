@@ -257,6 +257,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  // 清理留言更新事件监听器
+  window.removeEventListener('messages-updated', fetchMessages)
 })
 
 // 提交留言
@@ -298,6 +300,9 @@ const submitMessage = async () => {
       
       // 重新加载留言列表
       await fetchMessages()
+      
+      // 触发留言更新事件，通知其他页面刷新
+      window.dispatchEvent(new CustomEvent('messages-updated'))
       
       // 显示成功提示
       alert('留言发布成功！')

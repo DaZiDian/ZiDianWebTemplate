@@ -261,6 +261,8 @@ const savePost = async (postData) => {
       if (response.data.success) {
         alert('文章更新成功！')
         await fetchPosts()
+        // 触发博客更新事件，通知博客页面刷新
+        window.dispatchEvent(new CustomEvent('blog-updated'))
       } else {
         throw new Error(response.data.error || '更新失败')
       }
@@ -277,6 +279,8 @@ const savePost = async (postData) => {
       if (response.data.success) {
         alert('文章创建成功！')
         await fetchPosts()
+        // 刷新博客页面以显示最新数据
+        window.dispatchEvent(new CustomEvent('blog-updated'))
       } else {
         throw new Error(response.data.error || '创建失败')
       }
@@ -305,6 +309,8 @@ const deletePost = async (post) => {
     if (response.data.success) {
       alert('文章已删除')
       await fetchPosts()
+      // 刷新博客页面以显示最新数据
+      window.dispatchEvent(new CustomEvent('blog-updated'))
     } else {
       throw new Error(response.data.error || '删除失败')
     }
