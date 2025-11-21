@@ -34,8 +34,7 @@
           v-else
           v-for="(article, index) in articles" 
           :key="article.id || article.slug || index"
-          class="rounded-2xl p-6 card-hover scroll-animate"
-          :class="`scroll-animate-delay-${Math.min(index + 1, 6)}`"
+          class="rounded-2xl p-6 card-hover"
         >
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1">
