@@ -122,7 +122,7 @@
         <div 
           v-for="(message, index) in messages" 
           :key="index"
-          class="guestbook-message-card rounded-2xl p-6 card-hover scroll-animate"
+          class="rounded-2xl p-6 card-hover scroll-animate"
           :class="`scroll-animate-delay-${Math.min(index + 1, 6)}`"
           :style="{ animationDelay: `${index * 0.1}s` }"
         >
