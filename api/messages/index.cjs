@@ -1,4 +1,5 @@
-// Vercel Serverless Function - 留言 API (CommonJS)
+// Vercel Serverless Function - 留言 API
+// 使用 .js 扩展名，但保持 CommonJS 格式（通过 package.json 的 type: "module" 不会影响此文件，因为它在 api/ 目录下）
 const { sql } = require('@vercel/postgres');
 
 // 初始化数据库表（仅在表不存在时创建）
