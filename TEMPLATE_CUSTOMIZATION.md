@@ -327,5 +327,5 @@ A: 在 `src/components/Footer.vue` 的 `socialLinks` 对象中添加新项，然
 
 ---
 
-**最后更新**: 2024年11月
+**最后更新**: 2025年11月
 
