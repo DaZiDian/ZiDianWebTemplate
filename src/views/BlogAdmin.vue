@@ -46,36 +46,68 @@
       </div>
 
       <!-- 已认证状态 - 显示管理界面 -->
-      <div v-else>
-        <!-- 管理后台标题栏 -->
-        <div class="flex justify-between items-center mb-8">
-          <h1 class="text-4xl font-bold title-reveal">
-            博客管理后台
-          </h1>
-          <div class="flex gap-4">
-            <button 
-              @click="showEditor = true; editingPost = null"
-              class="px-6 py-2 rounded-lg font-medium transition-all duration-300"
-              :class="isDark 
-                ? 'bg-tokyo-night-blue hover:bg-tokyo-night-blue0 text-white' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'"
-            >
-              📝 写新文章
-            </button>
-            <button 
-              @click="logout"
-              class="px-6 py-2 rounded-lg font-medium border transition-all duration-300"
-              :class="isDark 
-                ? 'border-tokyo-night-blue text-tokyo-night-cyan hover:bg-tokyo-night-blue hover:text-white' 
-                : 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'"
-            >
-              退出登录
-            </button>
+      <div v-else class="flex gap-6">
+        <!-- 左侧菜单 -->
+        <div class="w-64 flex-shrink-0">
+          <div class="glass-effect rounded-2xl p-4 sticky top-24">
+            <h2 class="text-xl font-bold mb-4 transition-colors" :class="isDark ? 'text-white' : 'text-gray-800'">
+              管理菜单
+            </h2>
+            <nav class="space-y-2">
+              <button
+                @click="activeTab = 'blog'"
+                class="w-full text-left px-4 py-3 rounded-lg transition-all duration-300"
+                :class="activeTab === 'blog'
+                  ? (isDark ? 'bg-tokyo-night-blue text-white' : 'bg-blue-600 text-white')
+                  : (isDark ? 'text-gray-300 hover:bg-tokyo-night-bg-highlight' : 'text-gray-700 hover:bg-gray-100')"
+              >
+                📝 文章管理
+              </button>
+              <button
+                @click="activeTab = 'guestbook'"
+                class="w-full text-left px-4 py-3 rounded-lg transition-all duration-300"
+                :class="activeTab === 'guestbook'
+                  ? (isDark ? 'bg-tokyo-night-blue text-white' : 'bg-blue-600 text-white')
+                  : (isDark ? 'text-gray-300 hover:bg-tokyo-night-bg-highlight' : 'text-gray-700 hover:bg-gray-100')"
+              >
+                💬 留言管理
+              </button>
+            </nav>
+            <div class="mt-6 pt-6 border-t" :class="isDark ? 'border-tokyo-night-bg-highlight' : 'border-gray-200'">
+              <button 
+                @click="logout"
+                class="w-full px-4 py-2 rounded-lg font-medium border transition-all duration-300"
+                :class="isDark 
+                  ? 'border-tokyo-night-blue text-tokyo-night-cyan hover:bg-tokyo-night-blue hover:text-white' 
+                  : 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'"
+              >
+                退出登录
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- 文章列表 -->
-        <div v-if="!showEditor" class="space-y-4">
+        <!-- 右侧内容区域 -->
+        <div class="flex-1 min-w-0">
+          <!-- 文章管理 -->
+          <div v-if="activeTab === 'blog'">
+            <div class="flex justify-between items-center mb-6">
+              <h1 class="text-3xl font-bold title-reveal">
+                文章管理
+              </h1>
+              <button 
+                @click="showEditor = true; editingPost = null"
+                class="px-6 py-2 rounded-lg font-medium transition-all duration-300"
+                :class="isDark 
+                  ? 'bg-tokyo-night-blue hover:bg-tokyo-night-blue0 text-white' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'"
+              >
+                📝 写新文章
+              </button>
+            </div>
+
+            <!-- 文章列表 -->
+            <div v-if="!showEditor" class="space-y-4">
           <div v-if="isLoading && blogPosts.length === 0" class="text-center py-12">
             <p class="transition-colors" :class="isDark ? 'text-gray-400' : 'text-gray-600'">加载中...</p>
           </div>
@@ -122,14 +154,21 @@
           </div>
         </div>
 
-        <!-- 博客编辑器 -->
-        <BlogEditor 
-          v-if="showEditor"
-          :post="editingPost"
-          :is-saving="isSaving"
-          @save="savePost"
-          @cancel="showEditor = false; editingPost = null"
-        />
+            <!-- 博客编辑器 -->
+            <BlogEditor 
+              v-if="showEditor"
+              :post="editingPost"
+              :is-saving="isSaving"
+              @save="savePost"
+              @cancel="showEditor = false; editingPost = null"
+            />
+          </div>
+
+          <!-- 留言管理 -->
+          <div v-if="activeTab === 'guestbook'">
+            <GuestbookAdmin />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -139,6 +178,7 @@
 import { ref, onMounted } from 'vue'
 import { useTheme } from '../composables/useTheme'
 import BlogEditor from '../components/BlogEditor.vue'
+import GuestbookAdmin from '../components/GuestbookAdmin.vue'
 import axios from 'axios'
 
 const { isDark } = useTheme()
@@ -156,6 +196,9 @@ const isSaving = ref(false)
 // 编辑器状态
 const showEditor = ref(false)
 const editingPost = ref(null)
+
+// 活动标签页
+const activeTab = ref('blog')
 
 // 博客文章数据
 const blogPosts = ref([])

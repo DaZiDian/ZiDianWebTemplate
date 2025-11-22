@@ -6,6 +6,7 @@
     <div class="container mx-auto px-4 py-4">
       <div class="flex items-center justify-between">
         <!-- Logo -->
+        <!-- 可修改: Logo图片路径和网站名称 -->
         <router-link 
           to="/" 
           class="flex items-center gap-3 hover:scale-105 transition-transform"
@@ -17,6 +18,7 @@
         </router-link>
         
         <!-- 桌面端导航 -->
+        <!-- 可修改: 导航链接（在script中的navLinks数组中修改） -->
         <div class="hidden md:flex items-center space-x-8">
           <router-link
             v-for="link in navLinks"
@@ -138,6 +140,7 @@ const scrolled = ref(false)
 const mobileMenuOpen = ref(false)
 const { isDark, toggleTheme } = useTheme()
 
+// 可修改: 导航链接列表 - 添加、删除或修改导航项
 const navLinks = [
   { name: '主页', path: '/' },
   { name: '关于我', path: '/about' },
@@ -205,7 +208,7 @@ onUnmounted(() => {
   }
 }
 
-/* 链接下划线动画 - Tokyo Night */
+/* 可修改: 链接下划线样式 - 可以修改颜色、高度、位置、动画速度等 */
 .link-underline {
   position: relative;
   display: inline-block;
@@ -215,13 +218,13 @@ onUnmounted(() => {
   content: '';
   position: absolute;
   width: 100%;
-  height: 2px;
-  bottom: -4px;
+  height: 2px;  /* 可修改: 下划线高度 */
+  bottom: -4px;  /* 可修改: 下划线位置 */
   left: 0;
-  background: linear-gradient(90deg, #7aa2f7, #7dcfff);
+  background: linear-gradient(90deg, #7aa2f7, #7dcfff);  /* 可修改: 下划线颜色渐变 */
   transform: scaleX(0);
   transform-origin: center;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease;  /* 可修改: 动画速度 */
 }
 
 .link-underline:hover::after {

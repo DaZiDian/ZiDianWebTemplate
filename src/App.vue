@@ -20,6 +20,9 @@
         
         <!-- 底部信息栏 -->
         <Footer />
+        
+        <!-- 个性化设置组件 -->
+        <ThemeCustomizer />
       </div>
     </transition>
   </div>
@@ -30,6 +33,7 @@ import { ref, onMounted } from 'vue'
 import NavBar from './components/NavBar.vue'
 import Footer from './components/Footer.vue'
 import LoadingScreen from './components/LoadingScreen.vue'
+import ThemeCustomizer from './components/ThemeCustomizer.vue'
 import { useTheme } from './composables/useTheme'
 
 const loading = ref(true)

@@ -11,18 +11,19 @@ const blogComponents = {
   'introduce-my-blog': () => import('../views/Blogs/Introduce_My_Blog.vue')
 }
 
+// 可修改: 路由配置和页面标题
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: Home,
-    meta: { title: 'DaZiDian - 春風若有憐花意，可否許我再少年？' }
+    meta: { title: 'DaZiDian - 春風若有憐花意，可否許我再少年？' }  // 可修改: 主页标题
   },
   {
     path: '/about',
     name: 'About',
     component: About,
-    meta: { title: '关于我 - DaZiDian' }
+    meta: { title: '关于我 - DaZiDian' }  // 可修改: 关于我页面标题
   },
   {
     path: '/works',

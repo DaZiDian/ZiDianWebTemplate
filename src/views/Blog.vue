@@ -3,26 +3,10 @@
     <div class="container mx-auto px-4">
       <!-- 页面标题 -->
       <div class="text-center mb-12 animate-fade-in">
-        <div class="flex justify-between items-center mb-8">
-          <div class="flex-1"></div>
-          <div class="text-center">
-            <h1 class="text-5xl font-bold mb-4 title-reveal">
-              文章 | BLOG
-            </h1>
-            <p class="transition-colors" :class="isDark ? 'text-gray-300' : 'text-gray-600'">分享我的想法和经验</p>
-          </div>
-          <div class="flex-1 flex justify-end">
-            <router-link 
-              to="/admin/blog"
-              class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105"
-              :class="isDark 
-                ? 'bg-tokyo-night-bg-highlight text-tokyo-night-cyan border border-tokyo-night-blue hover:bg-tokyo-night-blue hover:text-white' 
-                : 'bg-blue-100 text-blue-600 border border-blue-300 hover:bg-blue-600 hover:text-white'"
-            >
-              📝 管理
-            </router-link>
-          </div>
-        </div>
+        <h1 class="text-5xl font-bold mb-4 title-reveal">
+          文章 | BLOG
+        </h1>
+        <p class="transition-colors" :class="isDark ? 'text-gray-300' : 'text-gray-600'">分享我的想法和经验</p>
       </div>
 
       <!-- 文章列表 -->
@@ -39,14 +23,9 @@
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1">
               <!-- 标题 -->
-              <router-link 
-                :to="`/blog/${article.slug}`" 
-                class="block mb-2"
-              >
-                <h2 class="blog-article-title text-2xl transition-colors cursor-pointer hover:opacity-80">
-                  {{ article.title }}
-                </h2>
-              </router-link>
+              <h2 class="blog-article-title text-2xl transition-colors cursor-pointer hover:opacity-80 mb-2">
+                {{ article.title }}
+              </h2>
               
               <!-- 发布时间和状态信息 -->
               <div class="blog-article-meta flex items-center gap-3 flex-wrap">
@@ -62,23 +41,43 @@
               </div>
               
               <!-- 正文预览 -->
-              <div class="prose prose-sm max-w-none leading-relaxed mb-3">
+              <div v-if="!expandedArticles[article.id]" class="prose prose-sm max-w-none leading-relaxed mb-3">
                 <p v-if="article.content" class="blog-article-content line-clamp-2">{{ article.content }}</p>
                 <p v-else class="blog-article-meta text-xs italic opacity-60">暂无内容预览...</p>
               </div>
+              
+              <!-- 展开的文章详情 -->
+              <div v-if="expandedArticles[article.id]" class="mt-4 pt-4 border-t transition-colors"
+                   :class="isDark ? 'border-tokyo-night-bg-highlight' : 'border-gray-200'">
+                <div class="prose prose-lg max-w-none transition-colors mb-4"
+                     :class="isDark ? 'prose-invert' : ''"
+                     v-html="renderMarkdown(article.fullContent || article.content)">
+                </div>
+              </div>
             </div>
             
-            <!-- 阅读更多按钮 -->
+            <!-- 阅读/收起按钮 -->
             <div class="flex-shrink-0">
-              <router-link 
-                :to="`/blog/${article.slug}`"
+              <button
+                v-if="!expandedArticles[article.id]"
+                @click="expandArticle(article)"
                 class="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105"
                 :class="isDark 
                   ? 'bg-tokyo-night-blue text-white hover:bg-tokyo-night-cyan' 
                   : 'bg-blue-600 text-white hover:bg-blue-700'"
               >
                 阅读 →
-              </router-link>
+              </button>
+              <button
+                v-else
+                @click="collapseArticle(article.id)"
+                class="inline-block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105"
+                :class="isDark 
+                  ? 'bg-tokyo-night-bg-highlight text-tokyo-night-cyan border border-tokyo-night-blue hover:bg-tokyo-night-blue hover:text-white' 
+                  : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'"
+              >
+                收起 ↑
+              </button>
             </div>
           </div>
         </article>
@@ -123,6 +122,74 @@ const isLoading = ref(false)
 
 // 文章数据
 const articles = ref([])
+// 展开的文章ID集合
+const expandedArticles = ref({})
+
+// 展开文章详情
+const expandArticle = async (article) => {
+  // 如果还没有加载完整内容，先加载
+  if (!article.fullContent) {
+    try {
+      const response = await axios.get(`${API_BASE}/blog?slug=${article.slug}`)
+      if (response.data.success) {
+        const fullArticle = response.data.data
+        // 更新文章数据
+        const index = articles.value.findIndex(a => a.id === article.id)
+        if (index !== -1) {
+          articles.value[index].fullContent = fullArticle.content
+        }
+        expandedArticles.value[article.id] = true
+      }
+    } catch (error) {
+      console.error('加载文章详情失败:', error)
+      alert('加载文章详情失败')
+    }
+  } else {
+    expandedArticles.value[article.id] = true
+  }
+}
+
+// 收起文章详情
+const collapseArticle = (articleId) => {
+  expandedArticles.value[articleId] = false
+}
+
+// 简单的Markdown渲染函数
+const renderMarkdown = (content) => {
+  if (!content) return ''
+  
+  let html = content
+    // 标题
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    // 粗体和斜体
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // 代码块
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    // 行内代码
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    // 链接
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">$1</a>')
+    // 图片
+    .replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0;">')
+    // 列表
+    .replace(/^\- (.+)$/gim, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    // 引用
+    .replace(/^> (.+)$/gim, '<blockquote>$1</blockquote>')
+    // 换行
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+  
+  // 包装段落
+  if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<pre') && !html.startsWith('<blockquote')) {
+    html = '<p>' + html + '</p>'
+  }
+  
+  return html
+}
 
 // 从API加载文章
 const fetchArticles = async () => {

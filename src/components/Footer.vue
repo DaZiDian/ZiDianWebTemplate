@@ -3,6 +3,7 @@
     <div class="container mx-auto px-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <!-- 左侧：Logo和信息 -->
+        <!-- 可修改: Logo、名称、职位、签名 -->
         <div class="text-tokyo-night-fg">
           <div class="flex items-center space-x-4 mb-4">
             <img src="/img/LOGO.jpg" alt="Logo" class="w-16 h-16 rounded-full ring-2 ring-tokyo-night-blue" />
@@ -14,16 +15,19 @@
           <p class="text-tokyo-night-fg-dark italic mb-4">
             —— 春風若有憐花意，可否許我再少年？
           </p>
+          <!-- 严禁修改: 版权信息 -->
           <p class="text-sm text-tokyo-night-dark5">
             DaZiDian & DSMCC ©2007-present All Copyrights Reserved.
           </p>
         </div>
         
         <!-- 右侧：联系方式 -->
+        <!-- 可修改: 联系方式标题和社交链接 -->
         <div class="text-tokyo-night-fg">
           <h4 class="text-xl font-bold mb-6 text-tokyo-night-cyan">联系我 | Contact Me</h4>
           
           <!-- 社交链接网格 -->
+          <!-- 可修改: 社交链接图标和链接地址（在script中的socialLinks对象中修改） -->
           <div class="grid grid-cols-4 gap-3">
             <!-- QQ -->
             <a 
@@ -215,6 +219,7 @@
 <script setup>
 import { ref } from 'vue'
 
+// 可修改: 社交链接地址 - 修改或添加你的社交平台链接
 const socialLinks = {
   qq: 'http://wpa.qq.com/msgrd?v=3&uin=2489043224&site=qq&menu=yes',
   bilibili: 'https://space.bilibili.com/386254163',
