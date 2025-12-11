@@ -1,16 +1,6 @@
 # Vercel 环境变量配置指南
 
-## 问题诊断
-
-根据错误日志，问题是：
-```
-invalid_connection_string: This connection string is meant to be used with a direct connection. 
-Make sure to use a pooled connection string or try `createClient()` instead.
-```
-
-## 解决方案
-
-代码已修复，现在可以自动检测并使用正确的连接方式。但您需要在 Vercel 中配置正确的环境变量。
+## 您需要在 Vercel 中配置正确的环境变量。
 
 ## 配置步骤
 
